@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="../pomo.css">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; user-select: none; }
+  #pet { position: absolute; left: 0; bottom: 2px; width: 110px; height: 121px; cursor: pointer; will-change: transform; }
+  #flip { width: 100%; height: 100%; transition: transform .15s; }
+  #flip.left { transform: scaleX(-1); }
+  #bubble {
+    position: absolute; bottom: 118px; left: 50%; transform: translateX(-50%) scale(.6);
+    background: #fffaf3; color: #5a3a34; border: 2px solid #ffd2c9; border-radius: 16px;
+    padding: 8px 13px; font: 600 13px/1.3 "Nunito", "Segoe UI", system-ui, sans-serif; white-space: nowrap;
+    opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none;
+    box-shadow: 0 4px 14px rgba(120, 60, 50, .15);
+  }
+  #bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
+  #bubble::after {
+    content: ""; position: absolute; left: 50%; bottom: -8px; width: 12px; height: 12px; margin-left: -7px;
+    background: #fffaf3; border-right: 2px solid #ffd2c9; border-bottom: 2px solid #ffd2c9; transform: rotate(45deg);
+  }
+  .note {
+    position: absolute; bottom: 90px; font-size: 20px; pointer-events: none;
+    animation: float 1.8s ease-out forwards;
+  }
+  @keyframes float {
+    from { transform: translate(0, 0) rotate(0); opacity: 1; }
+    to { transform: translate(var(--dx), -90px) rotate(var(--rot)); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <div id="pet">
+    <div id="bubble"></div>
+    <div id="flip"></div>
+  </div>
+  <script src="../pomo.js"></script>
+  <script src="pet.js"></script>
+</body>
+</html>

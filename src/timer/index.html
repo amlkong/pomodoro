@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+<title>Pomo</title>
+<link rel="stylesheet" href="../pomo.css">
+<link rel="stylesheet" href="timer.css">
+</head>
+<body data-phase="focus">
+<div class="card">
+  <header>
+    <span class="brand">pomo</span>
+    <span class="win">
+      <button id="gear" title="Settings" aria-label="Settings">⚙</button>
+      <button id="min" title="Minimize" aria-label="Minimize">–</button>
+      <button id="close" title="Close" aria-label="Close">×</button>
+    </span>
+  </header>
+
+  <main id="main">
+    <nav class="tabs">
+      <button data-phase="focus">Focus</button>
+      <button data-phase="short">Short break</button>
+      <button data-phase="long">Long break</button>
+    </nav>
+
+    <div class="ring">
+      <svg viewBox="0 0 200 200">
+        <circle class="track" cx="100" cy="100" r="90"/>
+        <circle class="prog" id="prog" cx="100" cy="100" r="90"/>
+      </svg>
+      <div class="center">
+        <div class="mini" id="mini"></div>
+        <div class="time" id="time">25:00</div>
+        <div class="label" id="label">ready when you are</div>
+      </div>
+    </div>
+
+    <div class="dots" id="dots"></div>
+
+    <div class="controls">
+      <button class="ghost" id="reset" title="Reset">↺</button>
+      <button class="primary" id="toggle">Start</button>
+      <button class="ghost" id="skip" title="Skip">⏭</button>
+    </div>
+
+    <div class="music">
+      <button id="brain">🧠 brain.fm</button>
+      <button id="spot">🎧 Spotify</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </main>
+
+  <section id="settings" hidden>
+    <h3>Timer</h3>
+    <label class="row">Focus <span><input type="number" id="focusMin" min="1" max="180"> min</span></label>
+    <label class="row">Short break <span><input type="number" id="shortMin" min="1" max="60"> min</span></label>
+    <label class="row">Long break <span><input type="number" id="longMin" min="1" max="120"> min</span></label>
+    <label class="row">Long break every <span><input type="number" id="longEvery" min="2" max="12"> rounds</span></label>
+    <label class="row">Start next round by itself <input type="checkbox" id="autoStart"></label>
+    <label class="row">Show Pomo on my screen <input type="checkbox" id="showPet"></label>
+
+    <h3>Music</h3>
+    <label class="row">Keep music on during breaks <input type="checkbox" id="musicOnBreaks"></label>
+    <label class="col">Spotify Client ID
+      <input type="text" id="spotifyClientId" placeholder="from developer.spotify.com" spellcheck="false">
+    </label>
+    <label class="col">Focus playlist link (optional)
+      <input type="text" id="spotifyPlaylist" placeholder="https://open.spotify.com/playlist/..." spellcheck="false">
+    </label>
+    <button class="wide" id="spotConnect">Connect Spotify</button>
+    <button class="wide primary" id="done">Done</button>
+  </section>
+</div>
+<script src="../pomo.js"></script>
+<script src="timer.js"></script>
+</body>
+</html>
