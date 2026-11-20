@@ -1,62 +1,105 @@
 /* Pomo's moves. Put one of these classes on a wrapper around the SVG:
-   .walking  .dancing  .sitting  .jumping  (no class = standing and breathing) */
+   .walking .dancing .sitting .slashing .bowing .jumping .held   (no class = standing) */
 .pomo-svg { width: 100%; height: 100%; overflow: visible; display: block; }
 .pomo-svg * { transform-box: fill-box; }
 
-.p-body { transform-origin: 50% 100%; animation: p-breathe 3s ease-in-out infinite; }
-.p-eyes { transform-origin: 50% 50%; animation: p-blink 4.5s infinite; }
-.p-leg { transform-origin: 50% 0%; }
-.p-arm-l { transform-origin: 100% 50%; }
-.p-arm-r { transform-origin: 0% 50%; }
-.p-leaf { transform-origin: 50% 100%; }
-.p-phones { display: none; }
+.o-all { transform-origin: 50% 100%; }
+.o-body { transform-origin: 50% 100%; animation: o-breathe 3s ease-in-out infinite; }
+.o-head { transform-origin: 50% 100%; }
+.o-hat { transform-origin: 50% 100%; }
+.o-eyes { transform-origin: 50% 50%; animation: o-blink 4.5s infinite; }
+.o-arm { transform-origin: 50% 0%; }
+.o-tail { transform-origin: 0% 30%; animation: o-wag 2.4s ease-in-out infinite; }
+.o-blade { display: none; transform-origin: 50% 85%; }
+.o-swoosh { opacity: 0; }
 
-@keyframes p-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
-@keyframes p-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+@keyframes o-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, .98); } }
+@keyframes o-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+@keyframes o-wag { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-10deg); } }
 
 /* walking */
-.walking .p-all { animation: p-bob .36s ease-in-out infinite; }
-.walking .p-leg-l { animation: p-step .36s ease-in-out infinite; }
-.walking .p-leg-r { animation: p-step .36s ease-in-out infinite reverse; }
-.walking .p-arm-l { animation: p-swing .36s ease-in-out infinite; }
-.walking .p-arm-r { animation: p-swing .36s ease-in-out infinite reverse; }
-@keyframes p-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-@keyframes p-step { 0%, 100% { transform: rotate(22deg); } 50% { transform: rotate(-22deg); } }
-@keyframes p-swing { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+.walking .o-all { animation: o-bob .34s ease-in-out infinite; }
+.walking .o-foot-l { animation: o-step .34s ease-in-out infinite; }
+.walking .o-foot-r { animation: o-step .34s ease-in-out infinite reverse; }
+.walking .o-arm-l { animation: o-swing .34s ease-in-out infinite; }
+.walking .o-arm-r { animation: o-swing .34s ease-in-out infinite reverse; }
+.walking .o-hat { animation: o-hat .34s ease-in-out infinite; }
+@keyframes o-bob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-3px) rotate(1.5deg); } }
+@keyframes o-step { 0%, 100% { transform: translate(4px, 0); } 50% { transform: translate(-4px, -4px); } }
+@keyframes o-swing { 0%, 100% { transform: rotate(-16deg); } 50% { transform: rotate(16deg); } }
+@keyframes o-hat { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 
 /* dancing */
-.dancing .p-all { transform-origin: 50% 100%; animation: p-groove .9s ease-in-out infinite; }
-.dancing .p-arm-l { animation: p-wave-l .45s ease-in-out infinite alternate; }
-.dancing .p-arm-r { animation: p-wave-r .45s ease-in-out infinite alternate-reverse; }
-.dancing .p-leg-l { animation: p-tap .45s ease-in-out infinite alternate; }
-.dancing .p-leg-r { animation: p-tap .45s ease-in-out infinite alternate-reverse; }
-.dancing .p-leaf { animation: p-leaf .45s ease-in-out infinite alternate; }
-.dancing .p-mouth { d: path("M51 78 Q60 92 69 78 Z"); fill: #3a2320; }
-@keyframes p-groove {
-  0%, 100% { transform: rotate(-9deg) translateY(0); }
+.dancing .o-all { animation: o-groove .9s ease-in-out infinite; }
+.dancing .o-arm-l { animation: o-wave-l .45s ease-in-out infinite alternate; }
+.dancing .o-arm-r { animation: o-wave-r .45s ease-in-out infinite alternate-reverse; }
+.dancing .o-foot-l { animation: o-step .45s ease-in-out infinite; }
+.dancing .o-foot-r { animation: o-step .45s ease-in-out infinite reverse; }
+.dancing .o-hat { animation: o-hat-bop .45s ease-in-out infinite alternate; }
+.dancing .o-tail { animation: o-wag .4s ease-in-out infinite; }
+.dancing .o-mouth, .jumping .o-mouth, .held .o-mouth { d: path("M65 76 Q70 84 75 76 Z"); fill: #2a2226; }
+@keyframes o-groove {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
   25% { transform: rotate(0deg) translateY(-7px); }
-  50% { transform: rotate(9deg) translateY(0); }
+  50% { transform: rotate(8deg) translateY(0); }
   75% { transform: rotate(0deg) translateY(-7px); }
 }
-@keyframes p-wave-l { from { transform: rotate(55deg); } to { transform: rotate(15deg); } }
-@keyframes p-wave-r { from { transform: rotate(-55deg); } to { transform: rotate(-15deg); } }
-@keyframes p-tap { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
-@keyframes p-leaf { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+@keyframes o-wave-l { from { transform: rotate(125deg); } to { transform: rotate(80deg); } }
+@keyframes o-wave-r { from { transform: rotate(-125deg); } to { transform: rotate(-80deg); } }
+@keyframes o-hat-bop { from { transform: rotate(-7deg) translateY(0); } to { transform: rotate(7deg) translateY(-2px); } }
 
-/* sitting with headphones on (focus time) */
-.sitting .p-phones { display: block; }
-.sitting .p-leg-l { transform: rotate(62deg); }
-.sitting .p-leg-r { transform: rotate(-62deg); }
-.sitting .p-all { transform: translateY(12px); }
-.sitting .p-body { transform-origin: 50% 100%; animation: p-nod 1.6s ease-in-out infinite; }
-.sitting .p-eyes { animation: p-blink 6s infinite; }
-@keyframes p-nod { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+/* sitting: meditating through focus time */
+.sitting .o-all { transform: translateY(5px); }
+.sitting .o-foot-l { transform: translate(-7px, -2px); }
+.sitting .o-foot-r { transform: translate(7px, -2px); }
+.sitting .o-arm-l { transform: rotate(-28deg); }
+.sitting .o-arm-r { transform: rotate(28deg); }
+.sitting .o-body { animation: o-breathe-deep 4.5s ease-in-out infinite; }
+.sitting .o-eyes { animation: none; transform: scaleY(.12); }
+.sitting .o-hat { transform: rotate(-3deg) translateY(1.5px); }
+.sitting .o-tail { animation-duration: 5s; }
+@keyframes o-breathe-deep { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .965); } }
 
-/* jumping (celebrating) */
-.jumping .p-all { animation: p-jump .55s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
-.jumping .p-arm-l { transform: rotate(60deg); }
-.jumping .p-arm-r { transform: rotate(-60deg); }
-.jumping .p-shadow { transform-origin: 50% 50%; animation: p-shadow .55s ease-in-out infinite alternate; }
-.jumping .p-mouth { d: path("M51 78 Q60 92 69 78 Z"); fill: #3a2320; }
-@keyframes p-jump { from { transform: translateY(0) scale(1.04, .94); } to { transform: translateY(-34px) scale(.97, 1.04); } }
-@keyframes p-shadow { from { transform: scale(1); } to { transform: scale(.6); opacity: .5; } }
+/* slashing: a quick sword flourish */
+.slashing .o-arm-r { display: none; }
+.slashing .o-blade { display: block; animation: o-slash 1.5s ease-in-out both; }
+.slashing .o-swoosh { animation: o-swoosh 1.5s ease-out both; }
+.slashing .o-all { animation: o-lunge 1.5s ease-in-out both; }
+.slashing .o-eyes { animation: none; transform: scaleY(.55); }
+@keyframes o-slash {
+  0% { transform: rotate(0deg); }
+  35% { transform: rotate(-55deg); }
+  52%, 78% { transform: rotate(115deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes o-swoosh { 0%, 40% { opacity: 0; } 50% { opacity: 1; } 80%, 100% { opacity: 0; } }
+@keyframes o-lunge {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  35% { transform: translateX(-4px) rotate(-5deg); }
+  52%, 78% { transform: translateX(7px) rotate(6deg); }
+}
+
+/* bowing */
+.bowing .o-head { animation: o-bow 1.7s ease-in-out both; }
+.bowing .o-body { animation: o-bow-body 1.7s ease-in-out both; }
+.bowing .o-eyes { animation: none; transform: scaleY(.12); }
+@keyframes o-bow { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(16deg) translateY(4px); } }
+@keyframes o-bow-body { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(9deg); } }
+
+/* jumping: celebrating */
+.jumping .o-all { animation: o-jump .5s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
+.jumping .o-arm-l { transform: rotate(118deg); }
+.jumping .o-arm-r { transform: rotate(-118deg); }
+.jumping .o-tail { animation: o-wag .3s ease-in-out infinite; }
+.jumping .o-shadow { transform-origin: 50% 50%; animation: o-shadow .5s ease-in-out infinite alternate; }
+@keyframes o-jump { from { transform: translateY(0) scale(1.04, .95); } to { transform: translateY(-32px) scale(.97, 1.04); } }
+@keyframes o-shadow { from { transform: scale(1); } to { transform: scale(.6); opacity: .5; } }
+
+/* held: picked up with the mouse, or falling */
+.held .o-shadow { opacity: 0; }
+.held .o-foot-l { animation: o-kick .22s ease-in-out infinite alternate; }
+.held .o-foot-r { animation: o-kick .22s ease-in-out infinite alternate-reverse; }
+.held .o-arm-l { transform: rotate(112deg); }
+.held .o-arm-r { transform: rotate(-112deg); }
+.held .o-tail { animation: o-wag .3s ease-in-out infinite; }
+@keyframes o-kick { from { transform: translateY(0); } to { transform: translateY(5px); } }

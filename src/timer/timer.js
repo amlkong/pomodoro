@@ -5,7 +5,7 @@ const LABELS = {
   short: ['a little break', 'breathe and stretch', 'paused, no rush'],
   long: ['a long break', 'you earned this', 'paused, no rush'],
 };
-const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'showPet', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
+const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
 
 const mini = $('mini');
 mini.innerHTML = window.POMO_SVG;
@@ -33,6 +33,10 @@ function render(s) {
   document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.phase === s.phase));
 
   // the little Pomo in the ring mirrors what the big one is doing
+  const where = !s.settings.showPet ? 'hidden' : s.settings.petRoam;
+  document.body.classList.toggle('pet-in', where === 'window');
+  $('roam').textContent = { screen: '🦦 whole screen', window: '🦦 in window', hidden: '🦦 hidden' }[where];
+
   mini.className = 'mini ' + (!s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing');
 
   // one dot per focus round until the next long break
@@ -64,6 +68,14 @@ function showSettings(show) {
   $('main').hidden = show;
 }
 
+// one button cycles where Pomo lives: whole screen, in this window, hidden
+$('roam').onclick = () => {
+  if (!current) return;
+  const { showPet, petRoam } = current.settings;
+  if (!showPet) window.api.updateSettings({ showPet: true, petRoam: 'screen' });
+  else if (petRoam === 'screen') window.api.updateSettings({ petRoam: 'window' });
+  else window.api.updateSettings({ showPet: false });
+};
 $('toggle').onclick = () => window.api.toggle();
 $('reset').onclick = () => window.api.reset();
 $('skip').onclick = () => window.api.skip();

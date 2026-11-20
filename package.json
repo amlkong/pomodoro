@@ -1,11 +1,13 @@
 {
   "name": "pomo",
   "version": "0.1.0",
-  "description": "A cute pomodoro timer with a little tomato friend who lives on your screen",
+  "description": "A cute pomodoro timer with a little samurai otter who lives on your screen",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --publish never"
   },
   "license": "MIT",
   "devDependencies": {
@@ -15,7 +17,42 @@
   "build": {
     "appId": "com.pomo.timer",
     "productName": "Pomo",
-    "files": ["src/**/*"],
-    "mac": { "category": "public.app-category.productivity" }
-  }
+    "files": [
+      "src/**/*"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "afterPack": "build/afterPack.js",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Pomo-${version}-mac-${arch}.${ext}"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Pomo-${version}-windows-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
+  },
+  "author": "amlkong"
 }

@@ -10,6 +10,7 @@ const DEFAULTS = {
   longEvery: 4,
   autoStart: true,
   showPet: true,
+  petRoam: 'screen', // 'screen' = whole desktop, 'window' = inside the timer window
   musicOnBreaks: false,
   spotifyClientId: '',
   spotifyPlaylist: '',
@@ -93,7 +94,9 @@ function broadcast() {
 }
 
 function petEvent(payload) {
-  if (petWin && !petWin.isDestroyed()) petWin.webContents.send('pet:event', payload);
+  for (const w of [timerWin, petWin]) {
+    if (w && !w.isDestroyed()) w.webContents.send('pet:event', payload);
+  }
 }
 
 function setRunning(running) {
@@ -176,10 +179,14 @@ function openBrainFm() {
 }
 
 // ---------- windows ----------
+// The timer window grows a little floor for Pomo when he lives inside it.
+const TIMER_W = 340;
+const timerHeight = () => (settings.showPet && settings.petRoam === 'window' ? 650 : 560);
+
 function createTimerWindow() {
   timerWin = new BrowserWindow({
-    width: 340,
-    height: 560,
+    width: TIMER_W,
+    height: timerHeight(),
     frame: false,
     transparent: true,
     resizable: false,
@@ -212,7 +219,8 @@ function createPetWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
   petWin.setAlwaysOnTop(true, 'screen-saver');
-  petWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  // skipTransformProcessType keeps the Dock icon from disappearing on macOS
+  petWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
   // Clicks pass straight through to whatever is underneath, except on Pomo.
   petWin.setIgnoreMouseEvents(true, { forward: true });
   petWin.loadFile(path.join(__dirname, 'pet', 'pet.html'));
@@ -220,8 +228,14 @@ function createPetWindow() {
 }
 
 function syncPetWindow() {
-  if (settings.showPet) createPetWindow();
+  if (settings.showPet && settings.petRoam === 'screen') createPetWindow();
   else if (petWin && !petWin.isDestroyed()) petWin.close();
+
+  if (timerWin && !timerWin.isDestroyed() && timerWin.getSize()[1] !== timerHeight()) {
+    timerWin.setResizable(true);
+    timerWin.setSize(TIMER_W, timerHeight());
+    timerWin.setResizable(false);
+  }
 }
 
 // ---------- ipc ----------
@@ -261,6 +275,7 @@ function registerIpc() {
     for (const k of ['autoStart', 'showPet', 'musicOnBreaks']) {
       if (k in patch) settings[k] = Boolean(patch[k]);
     }
+    if (patch.petRoam === 'screen' || patch.petRoam === 'window') settings.petRoam = patch.petRoam;
     if ('spotifyPlaylist' in patch) {
       settings.spotifyPlaylist = String(patch.spotifyPlaylist || '').trim();
       spotify.resetContext();
@@ -312,6 +327,8 @@ function registerIpc() {
 
 // ---------- boot ----------
 app.whenReady().then(() => {
+  // Windows needs this for notifications to show the app's name and icon
+  if (process.platform === 'win32') app.setAppUserModelId('com.pomo.timer');
   loadSettings();
   spotify.init({
     clientId: settings.spotifyClientId,
@@ -323,6 +340,11 @@ app.whenReady().then(() => {
   createTimerWindow();
   syncPetWindow();
   setInterval(tick, 250);
+
+  // keep Pomo's room matched to the screen if the resolution, taskbar or Dock changes
+  screen.on('display-metrics-changed', () => {
+    if (petWin && !petWin.isDestroyed()) petWin.setBounds(screen.getPrimaryDisplay().workArea);
+  });
 });
 
 app.on('before-quit', () => { quitting = true; });

@@ -14,10 +14,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 }
 
 header {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; align-items: center;
   padding: 14px 14px 4px 22px; -webkit-app-region: drag;
 }
 .brand { font-weight: 800; font-size: 18px; letter-spacing: .5px; color: var(--accent); transition: color .5s; }
+#roam {
+  -webkit-app-region: no-drag; margin-left: auto; margin-right: 4px; padding: 4px 10px; border-radius: 999px;
+  background: var(--soft); font-size: 11.5px; font-weight: 700; transition: background .5s;
+}
+#roam:hover { filter: brightness(.96); }
 .win { -webkit-app-region: no-drag; display: flex; gap: 2px; }
 .win button { width: 28px; height: 28px; border-radius: 50%; font-size: 16px; color: var(--muted); }
 .win button:hover { background: var(--soft); color: var(--ink); }
@@ -71,3 +76,16 @@ input[type="number"] { width: 58px; text-align: center; }
 input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
 .wide { width: 100%; padding: 9px; border-radius: 999px; font-weight: 700; font-size: 13.5px; background: var(--soft); margin-top: 3px; }
 .wide.primary { background: var(--accent); margin-bottom: 4px; }
+
+/* Pomo living inside the window: the page is his room, with a floor strip at the bottom */
+body { position: relative; --pet-w: 78px; --pet-floor: 10px; }
+#pet, #bubble { display: none; }
+body.pet-in #pet, body.pet-in #bubble { display: block; }
+body.pet-in main, body.pet-in #settings { padding-bottom: 104px; }
+body.pet-in .card::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px;
+  background: var(--soft); border-radius: 0 0 26px 26px; transition: background .5s;
+}
+body.pet-in .mini { display: none; }
+body.pet-in .time { font-size: 52px; }
+#bubble { font-size: 12px; }

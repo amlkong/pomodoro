@@ -1,0 +1,25 @@
+/* Shared by the full-screen overlay and the timer window. */
+#pet {
+  position: absolute; left: 0; bottom: var(--pet-floor, 2px); z-index: 20;
+  width: var(--pet-w, 120px); aspect-ratio: 140 / 150;
+  cursor: grab; will-change: transform; -webkit-app-region: no-drag;
+}
+#pet.grabbed { cursor: grabbing; }
+#flip { width: 100%; height: 100%; }
+#flip.left { transform: scaleX(-1); }
+#bubble {
+  position: absolute; left: 0; bottom: 0; z-index: 21;
+  background: #fffaf3; color: #5a3a34; border: 2px solid #ffd2c9; border-radius: 16px;
+  padding: 7px 12px; font: 600 13px/1.3 "Nunito", "Segoe UI", system-ui, sans-serif; white-space: nowrap;
+  opacity: 0; transition: opacity .2s; pointer-events: none;
+  box-shadow: 0 4px 14px rgba(120, 60, 50, .15);
+}
+#bubble.show { opacity: 1; }
+.note {
+  position: absolute; z-index: 21; font-size: 20px; pointer-events: none;
+  animation: note-float 1.8s ease-out forwards;
+}
+@keyframes note-float {
+  from { transform: translate(0, 0) rotate(0); opacity: 1; }
+  to { transform: translate(var(--dx), -80px) rotate(var(--rot)); opacity: 0; }
+}
