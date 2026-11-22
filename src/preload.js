@@ -11,7 +11,6 @@ contextBridge.exposeInMainWorld('api', {
   skip: send('timer:skip'),
   setPhase: send('timer:phase'),
   updateSettings: send('settings:update'),
-  openBrainFm: send('brainfm:open'),
   spotifyConnect: send('spotify:connect'),
   spotifyDisconnect: send('spotify:disconnect'),
   petHover: send('pet:hover'),

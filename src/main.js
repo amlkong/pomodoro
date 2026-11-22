@@ -21,8 +21,6 @@ const DURATION_KEY = { focus: 'focusMin', short: 'shortMin', long: 'longMin' };
 let settings = { ...DEFAULTS };
 let timerWin = null;
 let petWin = null;
-let brainWin = null;
-let quitting = false;
 
 const state = { phase: 'focus', running: false, remainingMs: 0, totalMs: 0, completed: 0 };
 let endAt = 0;
@@ -82,7 +80,6 @@ function publicState() {
     ...state,
     settings: safeSettings,
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
-    brainOpen: Boolean(brainWin),
   };
 }
 
@@ -142,40 +139,11 @@ function tick() {
 function syncMusic() {
   const want = state.running && (state.phase === 'focus' || settings.musicOnBreaks);
 
-  if (brainWin && !brainWin.isDestroyed()) brainWin.webContents.setAudioMuted(!want);
-
   if (want === lastWantMusic) return;
   lastWantMusic = want;
   if (!spotify.isConnected()) return;
   const job = want ? spotify.play(settings.spotifyPlaylist) : spotify.pause();
   job.then(() => { spotifyMsg = ''; }, (e) => { spotifyMsg = e.message; }).finally(broadcast);
-}
-
-function openBrainFm() {
-  if (brainWin && !brainWin.isDestroyed()) {
-    brainWin.show();
-    brainWin.focus();
-    return;
-  }
-  brainWin = new BrowserWindow({
-    width: 1000,
-    height: 720,
-    title: 'brain.fm',
-    autoHideMenuBar: true,
-    webPreferences: { partition: 'persist:brainfm' },
-  });
-  brainWin.loadURL('https://www.brain.fm/');
-  // Closing only hides it, so the music keeps going in the background.
-  brainWin.on('close', (e) => {
-    if (!quitting) {
-      e.preventDefault();
-      brainWin.hide();
-    }
-  });
-  brainWin.on('closed', () => { brainWin = null; });
-  const want = state.running && (state.phase === 'focus' || settings.musicOnBreaks);
-  brainWin.webContents.setAudioMuted(!want && state.running);
-  broadcast();
 }
 
 // ---------- windows ----------
@@ -289,8 +257,6 @@ function registerIpc() {
     broadcast();
   });
 
-  ipcMain.on('brainfm:open', openBrainFm);
-
   ipcMain.on('spotify:connect', async () => {
     if (!settings.spotifyClientId) {
       spotifyMsg = 'Paste your Spotify Client ID first';
@@ -347,5 +313,4 @@ app.whenReady().then(() => {
   });
 });
 
-app.on('before-quit', () => { quitting = true; });
 app.on('window-all-closed', () => app.quit());

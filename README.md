@@ -50,17 +50,9 @@ The 🦦 button at the top of the timer chooses where he lives. Click it to cycl
 
 Click him for a little hello. You can also pick him up with the mouse, carry him anywhere, and drop him.
 
-## Music
+## Music (Spotify)
 
-### brain.fm
-
-Click **🧠 brain.fm**. It opens brain.fm in its own window. Log in once (it remembers you), pick your focus music and press play. From then on Pomo mutes it during breaks and brings it back when you focus. Closing that window only hides it, so the music keeps going.
-
-If "Continue with Google" doesn't work in that window, use your email and password instead. Google sometimes blocks logins inside apps.
-
-### Spotify
-
-Pomo works like a remote control for the Spotify app you already have open. This needs Spotify Premium (Spotify's rule for remote control) and a one time setup:
+Pomo works like a remote control for the Spotify app you already have open: play when you focus, pause on breaks. This needs Spotify Premium (Spotify's rule for remote control) and a one time setup:
 
 1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and create an app. Any name is fine.
 2. Add this Redirect URI exactly: `http://127.0.0.1:8888/callback`
@@ -69,6 +61,8 @@ Pomo works like a remote control for the Spotify app you already have open. This
 5. Log in on the page that opens.
 
 After that, starting a focus round presses play and breaks press pause. Have Spotify open on your computer or phone so there's something to control.
+
+Tip: paste a focus playlist link (binaural beats, lo-fi, deep focus, whatever works for you) and Pomo starts that playlist on your first focus round.
 
 ## Project layout
 

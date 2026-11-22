@@ -48,7 +48,6 @@ function render(s) {
   [...dots.children].forEach((d, i) => d.classList.toggle('on', i < filled));
   dots.title = `${s.completed} focus round${s.completed === 1 ? '' : 's'} today`;
 
-  $('brain').classList.toggle('on', s.brainOpen);
   $('spot').classList.toggle('on', s.spotify.connected);
   $('spotConnect').textContent = s.spotify.connected ? 'Disconnect Spotify' : 'Connect Spotify';
   $('msg').textContent = s.spotify.message || '';
@@ -83,7 +82,6 @@ $('min').onclick = () => window.api.minimize();
 $('close').onclick = () => window.api.close();
 $('gear').onclick = () => showSettings($('settings').hidden);
 $('done').onclick = () => showSettings(false);
-$('brain').onclick = () => window.api.openBrainFm();
 $('spot').onclick = () => {
   if (current && current.spotify.connected) $('msg').textContent = 'Spotify is connected. It plays when you focus.';
   else showSettings(true);
