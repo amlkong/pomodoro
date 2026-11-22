@@ -11,6 +11,7 @@ const mini = $('mini');
 mini.innerHTML = window.POMO_SVG;
 let current = null;
 let settingsFilled = false;
+let tasksKey = '';
 
 function fmt(ms) {
   const total = Math.ceil(ms / 1000);
@@ -52,6 +53,8 @@ function render(s) {
   $('spotConnect').textContent = s.spotify.connected ? 'Disconnect Spotify' : 'Connect Spotify';
   $('msg').textContent = s.spotify.message || '';
 
+  renderTasks(s.settings.tasks || []);
+
   if (!settingsFilled) {
     settingsFilled = true;
     for (const id of SETTING_IDS) {
@@ -59,6 +62,37 @@ function render(s) {
       if (el.type === 'checkbox') el.checked = s.settings[id];
       else el.value = s.settings[id];
     }
+  }
+}
+
+// The state arrives several times a second, so only rebuild the list when it really changed.
+function renderTasks(tasks) {
+  const key = JSON.stringify(tasks);
+  if (key === tasksKey) return;
+  tasksKey = key;
+  const left = tasks.filter((t) => !t.done).length;
+  $('todoCount').textContent = !tasks.length ? 'To do' : left ? `To do · ${left} left` : 'To do · all done!';
+  $('clearDone').hidden = !tasks.some((t) => t.done);
+  const ul = $('tasks');
+  ul.textContent = '';
+  for (const t of tasks) {
+    const li = document.createElement('li');
+    li.className = t.done ? 'done' : '';
+    const label = document.createElement('label');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.checked = t.done;
+    box.onchange = () => window.api.toggleTask(t.id);
+    const text = document.createElement('span');
+    text.textContent = t.text;
+    label.append(box, text);
+    const del = document.createElement('button');
+    del.textContent = '×';
+    del.title = 'Remove';
+    del.setAttribute('aria-label', `Remove ${t.text}`);
+    del.onclick = () => window.api.removeTask(t.id);
+    li.append(label, del);
+    ul.append(li);
   }
 }
 
@@ -93,6 +127,12 @@ $('spotConnect').onclick = () => {
     showSettings(false);
   }
 };
+$('newTask').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || !e.target.value.trim()) return;
+  window.api.addTask(e.target.value);
+  e.target.value = '';
+});
+$('clearDone').onclick = () => window.api.clearDoneTasks();
 document.querySelectorAll('.tabs button').forEach((b) => {
   b.onclick = () => window.api.setPhase(b.dataset.phase);
 });

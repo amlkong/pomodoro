@@ -36,6 +36,7 @@ npm start
 ## What it does
 
 - Focus / short break / long break timer, with a long break every 4 rounds (all adjustable in ⚙)
+- A to-do list right in the timer window: add what you want to get through, check things off as you go (Pomo cheers), and it's still there next time you open the app
 - Desktop notification when a round ends
 - Space bar starts and pauses
 - Music that follows the timer: on while you focus, off on breaks (or keep it on, your call)

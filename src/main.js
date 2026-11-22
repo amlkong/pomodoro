@@ -15,6 +15,7 @@ const DEFAULTS = {
   spotifyClientId: '',
   spotifyPlaylist: '',
   spotifyRefresh: '',
+  tasks: [], // { id, text, done }
 };
 const DURATION_KEY = { focus: 'focusMin', short: 'shortMin', long: 'longMin' };
 
@@ -33,8 +34,9 @@ const settingsFile = () => path.join(app.getPath('userData'), 'settings.json');
 function loadSettings() {
   try {
     settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(settingsFile(), 'utf8')) };
+    if (!Array.isArray(settings.tasks)) settings.tasks = [];
   } catch {
-    settings = { ...DEFAULTS };
+    settings = { ...DEFAULTS, tasks: [] };
   }
 }
 
@@ -149,7 +151,10 @@ function syncMusic() {
 // ---------- windows ----------
 // The timer window grows a little floor for Pomo when he lives inside it.
 const TIMER_W = 340;
-const timerHeight = () => (settings.showPet && settings.petRoam === 'window' ? 650 : 560);
+function timerHeight() {
+  const want = settings.showPet && settings.petRoam === 'window' ? 750 : 665;
+  return Math.min(want, screen.getPrimaryDisplay().workArea.height);
+}
 
 function createTimerWindow() {
   timerWin = new BrowserWindow({
@@ -255,6 +260,30 @@ function registerIpc() {
     lastWantMusic = null;
     syncMusic();
     broadcast();
+  });
+
+  // to-do list
+  const tasksChanged = () => { saveSettings(); broadcast(); };
+  ipcMain.on('tasks:add', (_e, text) => {
+    const clean = String(text || '').trim().slice(0, 140);
+    if (!clean || settings.tasks.length >= 100) return;
+    settings.tasks.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text: clean, done: false });
+    tasksChanged();
+  });
+  ipcMain.on('tasks:toggle', (_e, id) => {
+    const task = settings.tasks.find((t) => t.id === id);
+    if (!task) return;
+    task.done = !task.done;
+    if (task.done) petEvent({ type: 'task-done', allDone: settings.tasks.every((t) => t.done) });
+    tasksChanged();
+  });
+  ipcMain.on('tasks:remove', (_e, id) => {
+    settings.tasks = settings.tasks.filter((t) => t.id !== id);
+    tasksChanged();
+  });
+  ipcMain.on('tasks:clearDone', () => {
+    settings.tasks = settings.tasks.filter((t) => !t.done);
+    tasksChanged();
   });
 
   ipcMain.on('spotify:connect', async () => {

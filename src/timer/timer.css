@@ -35,17 +35,17 @@ main { align-items: center; }
 .tabs button { padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
 .tabs button.on { background: #fff; color: var(--accent); box-shadow: 0 2px 6px rgba(0, 0, 0, .06); }
 
-.ring { position: relative; width: 236px; height: 236px; margin-top: 16px; }
+.ring { position: relative; width: 204px; height: 204px; margin-top: 14px; flex-shrink: 0; }
 .ring > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .ring > svg circle { fill: none; stroke-width: 10; }
 .track { stroke: var(--soft); transition: stroke .5s; }
 .prog { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 565.49; transition: stroke-dashoffset .3s linear, stroke .5s; }
 .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.mini { width: 62px; height: 68px; margin-bottom: 2px; }
-.time { font-size: 46px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.mini { width: 52px; height: 56px; margin-bottom: 1px; }
+.time { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
 .label { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-top: 6px; }
 
-.dots { display: flex; gap: 7px; margin: 14px 0 12px; height: 12px; }
+.dots { display: flex; gap: 7px; margin: 12px 0 10px; height: 12px; flex-shrink: 0; }
 .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--soft); transition: background .4s, transform .4s; }
 .dots i.on { background: var(--accent); transform: scale(1.1); }
 
@@ -59,11 +59,11 @@ main { align-items: center; }
 .ghost { width: 40px; height: 40px; border-radius: 50%; background: var(--soft); font-size: 17px; color: var(--ink); }
 .ghost:hover { filter: brightness(.96); }
 
-.music { display: flex; gap: 8px; margin-top: 16px; }
+.music { display: flex; gap: 8px; margin-top: 14px; }
 .music button { background: #fff; border: 2px solid var(--soft); padding: 7px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
 .music button:hover { border-color: var(--accent); }
 .music button.on { background: var(--soft); border-color: var(--accent); }
-.msg { min-height: 30px; margin-top: 7px; font-size: 11.5px; line-height: 1.3; color: var(--muted); text-align: center; }
+.msg { min-height: 0; margin-top: 5px; font-size: 11.5px; line-height: 1.3; color: var(--muted); text-align: center; }
 
 #settings { overflow-y: auto; gap: 7px; user-select: text; }
 #settings h3 { margin: 8px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); }
@@ -87,5 +87,23 @@ body.pet-in .card::after {
   background: var(--soft); border-radius: 0 0 26px 26px; transition: background .5s;
 }
 body.pet-in .mini { display: none; }
-body.pet-in .time { font-size: 52px; }
+body.pet-in .time { font-size: 46px; }
 #bubble { font-size: 12px; }
+
+/* to-do list */
+.todo { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 8px; user-select: text; }
+.todo-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); transition: color .5s; }
+.todo-head button { font-size: 11.5px; font-weight: 700; color: var(--muted); text-decoration: underline; }
+#newTask { width: 100%; margin: 6px 0 4px; padding: 7px 12px; border-radius: 12px; font-size: 13px; }
+#newTask::placeholder { color: var(--muted); }
+#tasks { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; }
+#tasks li { display: flex; align-items: flex-start; gap: 4px; padding: 4px 2px 4px 4px; border-radius: 8px; font-size: 13.5px; font-weight: 600; }
+#tasks li:hover { background: var(--soft); }
+#tasks label { flex: 1; display: flex; align-items: flex-start; gap: 8px; cursor: pointer; min-width: 0; }
+#tasks label span { overflow-wrap: anywhere; line-height: 1.35; }
+#tasks input[type="checkbox"] { flex-shrink: 0; width: 17px; height: 17px; margin: 1px 0 0; }
+#tasks li.done span { text-decoration: line-through; color: var(--muted); }
+#tasks li button { visibility: hidden; width: 20px; height: 20px; border-radius: 50%; color: var(--muted); font-size: 15px; line-height: 1; flex-shrink: 0; }
+#tasks li:hover button, #tasks li button:focus-visible { visibility: visible; }
+#tasks::-webkit-scrollbar { width: 6px; }
+#tasks::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 3px; }

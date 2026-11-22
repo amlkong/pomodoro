@@ -201,6 +201,10 @@
   });
 
   window.api.onPetEvent((e) => {
+    if (e.type === 'task-done') {
+      act('jumping', 1000);
+      say(e.allDone ? 'All done!! Amazing' : ['One down!', 'Nice one!', 'Clean cut!', 'Checked off!'][Math.floor(Math.random() * 4)], 2200);
+    }
     if (e.type === 'phase-end') {
       act('jumping', 3300);
       say(e.from === 'focus' ? 'You did it!! Break time' : 'Okay! Let\'s go again', 4000);
