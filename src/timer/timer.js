@@ -5,7 +5,7 @@ const LABELS = {
   short: ['a little break', 'breathe and stretch', 'paused, no rush'],
   long: ['a long break', 'you earned this', 'paused, no rush'],
 };
-const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'petScale', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
+const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'alarmSound', 'petScale', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
 
 const mini = $('mini');
 let miniChar = '';
@@ -42,8 +42,17 @@ function render(s) {
     miniChar = charId;
     mini.innerHTML = char.svg;
   }
-  $('roam').textContent = `${char.emoji} ${{ screen: 'whole screen', window: 'in window', hidden: 'hidden' }[where]}`;
-  $('swap').title = `Switch character (now: ${char.name})`;
+  $('roam').textContent = `${char.emoji} ${{ screen: 'on screen', window: 'in window', hidden: 'hidden' }[where]}`;
+  $('swap').title = `Choose character (now: ${char.name})`;
+  document.body.classList.toggle('max', s.maximized);
+  $('max').textContent = s.maximized ? '❐' : '□';
+  $('max').title = s.maximized ? 'Restore' : 'Maximize';
+  $('update').hidden = !s.update;
+  if (s.update) {
+    $('update').textContent = s.update.status === 'ready'
+      ? `✨ Version ${s.update.version} is ready · restart`
+      : `✨ Version ${s.update.version} is out · download`;
+  }
 
   mini.className = 'mini ' + (!s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing');
 
@@ -117,12 +126,74 @@ $('roam').onclick = () => {
   else if (petRoam === 'screen') window.api.updateSettings({ petRoam: 'window' });
   else window.api.updateSettings({ showPet: false });
 };
-// cycle through every character in src/characters
-$('swap').onclick = () => {
-  const ids = Object.keys(window.CHARACTERS);
-  const next = ids[(ids.indexOf(miniChar) + 1) % ids.length];
-  window.api.updateSettings({ character: next, ...(current && !current.settings.showPet ? { showPet: true } : {}) });
+// character picker: a little menu listing everyone in src/characters
+const charMenu = $('charMenu');
+function buildCharMenu() {
+  charMenu.textContent = '';
+  for (const [id, c] of Object.entries(window.CHARACTERS)) {
+    const item = document.createElement('button');
+    item.setAttribute('role', 'menuitemradio');
+    item.setAttribute('aria-checked', String(id === miniChar));
+    item.className = id === miniChar ? 'on' : '';
+    const pic = document.createElement('span');
+    pic.className = 'pic';
+    pic.innerHTML = c.svg;
+    const name = document.createElement('span');
+    name.textContent = c.name;
+    item.append(pic, name);
+    item.onclick = () => {
+      charMenu.hidden = true;
+      window.api.updateSettings({ character: id, ...(current && !current.settings.showPet ? { showPet: true } : {}) });
+    };
+    charMenu.append(item);
+  }
+}
+$('swap').onclick = (e) => {
+  e.stopPropagation();
+  if (charMenu.hidden) buildCharMenu();
+  charMenu.hidden = !charMenu.hidden;
 };
+document.addEventListener('click', (e) => {
+  if (!charMenu.hidden && !charMenu.contains(e.target)) charMenu.hidden = true;
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') charMenu.hidden = true;
+});
+
+// alarm: a soft three-note chime, made on the spot so there is no sound file to ship
+let audioCtx = null;
+function chime(repeats = 3) {
+  try {
+    audioCtx = audioCtx || new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const notes = [659.25, 783.99, 1046.5]; // E5, G5, C6
+    const start = audioCtx.currentTime + 0.05;
+    for (let r = 0; r < repeats; r++) {
+      notes.forEach((freq, i) => {
+        const t = start + r * 1.15 + i * 0.17;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.28, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.75);
+      });
+    }
+  } catch (err) {
+    console.error('Could not play the alarm', err);
+  }
+}
+window.api.onPetEvent((e) => {
+  if (e.type === 'phase-end' && current && current.settings.alarmSound) chime();
+});
+$('alarmSound').addEventListener('change', (e) => { if (e.target.checked) chime(1); });
+
+$('max').onclick = () => window.api.maximize();
+$('update').onclick = () => window.api.applyUpdate();
 $('toggle').onclick = () => window.api.toggle();
 $('reset').onclick = () => window.api.reset();
 $('skip').onclick = () => window.api.skip();

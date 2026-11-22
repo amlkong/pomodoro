@@ -10,6 +10,7 @@ const DEFAULTS = {
   longEvery: 4,
   autoStart: true,
   showPet: true,
+  alarmSound: true,
   petScale: 1, // character size, 0.5 to 2.5
   character: 'otter', // a file name from src/characters
   petRoam: 'screen', // 'screen' = whole desktop, 'window' = inside the timer window
@@ -26,6 +27,9 @@ let timerWin = null;
 let petWin = null;
 
 const state = { phase: 'focus', running: false, remainingMs: 0, totalMs: 0, completed: 0 };
+let restoreBounds = null; // set while the timer window is maximized
+let update = null;        // { status: 'ready' | 'available', version, url? }
+let autoUpdater = null;
 let endAt = 0;
 let spotifyMsg = '';
 let lastWantMusic = null;
@@ -85,6 +89,8 @@ function publicState() {
     ...state,
     settings: safeSettings,
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
+    maximized: Boolean(restoreBounds),
+    update,
   };
 }
 
@@ -170,7 +176,7 @@ function createTimerWindow() {
     fullscreenable: false,
     hasShadow: true,
     title: 'Pomo',
-    webPreferences: { preload: path.join(__dirname, 'preload.js') },
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false },
   });
   timerWin.loadFile(path.join(__dirname, 'timer', 'index.html'));
   timerWin.on('closed', () => {
@@ -207,7 +213,9 @@ function syncPetWindow() {
   if (settings.showPet && settings.petRoam === 'screen') createPetWindow();
   else if (petWin && !petWin.isDestroyed()) petWin.close();
 
-  if (timerWin && !timerWin.isDestroyed() && timerWin.getSize()[1] !== timerHeight()) {
+  if (restoreBounds) {
+    restoreBounds.height = timerHeight(); // maximized: remember the right size for later
+  } else if (timerWin && !timerWin.isDestroyed() && timerWin.getSize()[1] !== timerHeight()) {
     timerWin.setResizable(true);
     timerWin.setSize(TIMER_W, timerHeight());
     timerWin.setResizable(false);
@@ -248,7 +256,7 @@ function registerIpc() {
     if ('shortMin' in patch) settings.shortMin = clampInt(patch.shortMin, 1, 60, settings.shortMin);
     if ('longMin' in patch) settings.longMin = clampInt(patch.longMin, 1, 120, settings.longMin);
     if ('longEvery' in patch) settings.longEvery = clampInt(patch.longEvery, 2, 12, settings.longEvery);
-    for (const k of ['autoStart', 'showPet', 'musicOnBreaks']) {
+    for (const k of ['autoStart', 'showPet', 'musicOnBreaks', 'alarmSound']) {
       if (k in patch) settings[k] = Boolean(patch[k]);
     }
     if (patch.petRoam === 'screen' || patch.petRoam === 'window') settings.petRoam = patch.petRoam;
@@ -322,7 +330,68 @@ function registerIpc() {
   });
 
   ipcMain.on('win:minimize', () => timerWin && timerWin.minimize());
+  // Fill the screen and go back. Done by hand because see-through windows
+  // can't use the normal maximize on Windows.
+  ipcMain.on('win:maximize', () => {
+    if (!timerWin || timerWin.isDestroyed()) return;
+    let target;
+    if (restoreBounds) {
+      target = restoreBounds;
+      restoreBounds = null;
+    } else {
+      restoreBounds = timerWin.getBounds();
+      target = screen.getDisplayMatching(restoreBounds).workArea;
+    }
+    timerWin.setResizable(true);
+    timerWin.setBounds(target);
+    timerWin.setResizable(false);
+    broadcast();
+  });
+  ipcMain.on('update:apply', () => {
+    if (!update) return;
+    if (update.status === 'ready' && autoUpdater) autoUpdater.quitAndInstall(true, true);
+    else if (update.url) shell.openExternal(update.url);
+  });
   ipcMain.on('win:close', () => timerWin && timerWin.close());
+}
+
+// ---------- updates ----------
+// Windows: new versions download quietly in the background and are installed
+// the next time the app closes (or right away from the "Restart" pill).
+// Mac: the app isn't signed, so it can only point you at the download page.
+const RELEASES_API = 'https://api.github.com/repos/amlkong/pomodoro/releases/latest';
+const newer = (a, b) => a.localeCompare(b, undefined, { numeric: true }) > 0;
+
+function setupUpdates() {
+  if (!app.isPackaged) return;
+  if (process.platform === 'win32') {
+    autoUpdater = require('electron-updater').autoUpdater;
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on('update-downloaded', (info) => {
+      update = { status: 'ready', version: info.version };
+      broadcast();
+    });
+    autoUpdater.on('error', (e) => console.error('Update check failed:', e.message));
+    const check = () => autoUpdater.checkForUpdates().catch(() => {});
+    check();
+    setInterval(check, 60 * 60 * 1000);
+    return;
+  }
+  const check = async () => {
+    try {
+      const res = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } });
+      if (!res.ok) return;
+      const rel = await res.json();
+      const version = String(rel.tag_name || '').replace(/^v/, '');
+      if (version && newer(version, app.getVersion())) {
+        update = { status: 'available', version, url: rel.html_url };
+        broadcast();
+      }
+    } catch { /* offline, try again later */ }
+  };
+  check();
+  setInterval(check, 60 * 60 * 1000);
 }
 
 // ---------- boot ----------
@@ -340,6 +409,7 @@ app.whenReady().then(() => {
   createTimerWindow();
   syncPetWindow();
   setInterval(tick, 250);
+  setupUpdates();
 
   // keep Pomo's room matched to the screen if the resolution, taskbar or Dock changes
   screen.on('display-metrics-changed', () => {

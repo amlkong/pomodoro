@@ -25,12 +25,12 @@ header {
 #swap svg { width: 14px; height: 14px; }
 #swap:hover { transform: rotate(180deg); }
 #roam {
-  -webkit-app-region: no-drag; margin-right: 4px; padding: 4px 10px; border-radius: 999px;
+  -webkit-app-region: no-drag; margin-right: 2px; white-space: nowrap; padding: 4px 10px; border-radius: 999px;
   background: var(--soft); font-size: 11.5px; font-weight: 700; transition: background .5s;
 }
 #roam:hover { filter: brightness(.96); }
 .win { -webkit-app-region: no-drag; display: flex; gap: 2px; }
-.win button { width: 28px; height: 28px; border-radius: 50%; font-size: 16px; color: var(--muted); }
+.win button { width: 26px; height: 28px; border-radius: 50%; font-size: 16px; color: var(--muted); }
 .win button:hover { background: var(--soft); color: var(--ink); }
 
 main, #settings { flex: 1; padding: 6px 22px 18px; display: flex; flex-direction: column; }
@@ -114,3 +114,24 @@ body.pet-in .time { font-size: 46px; }
 #tasks li:hover button, #tasks li button:focus-visible { visibility: visible; }
 #tasks::-webkit-scrollbar { width: 6px; }
 #tasks::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 3px; }
+
+/* character picker */
+#charMenu {
+  position: absolute; top: 46px; left: 50%; transform: translateX(-50%); z-index: 30; width: 190px; padding: 6px;
+  background: #fff; border: 2px solid var(--soft); border-radius: 16px; box-shadow: 0 10px 28px rgba(80, 40, 30, .18);
+  display: flex; flex-direction: column; gap: 2px; -webkit-app-region: no-drag;
+}
+#charMenu button { display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: 11px; font-size: 14px; font-weight: 700; text-align: left; }
+#charMenu button:hover { background: var(--soft); }
+#charMenu button.on { background: var(--soft); color: var(--accent); }
+#charMenu button.on::after { content: "✓"; margin-left: auto; }
+#charMenu .pic { width: 34px; height: 36px; flex-shrink: 0; pointer-events: none; }
+
+/* update pill */
+#update { background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 800; padding: 5px 12px; border-radius: 999px; margin-bottom: 8px; }
+
+/* maximized: square corners, everything a bit bigger and centred */
+body.max .card, body.max .card::after { border-radius: 0; }
+body.max main, body.max #settings { width: 100%; max-width: 400px; margin: 0 auto; zoom: 1.3; }
+body.max { --pet-w: 110px; }
+body.max #charMenu { left: auto; right: 120px; transform: none; }

@@ -46,6 +46,8 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
           if-no-files-found: error
 
   # Puts the installers on the repo's Releases page so they are easy to find.
@@ -65,7 +67,8 @@ jobs:
           VERSION: 0.1.${{ github.run_number }}
         run: |
           ls -la dist
-          gh release create "v$VERSION" dist/*.exe dist/*.dmg \
+          # latest.yml and the .blockmap are what the Windows app reads to update itself
+          gh release create "v$VERSION" dist/*.exe dist/*.dmg dist/*.blockmap dist/latest.yml \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "Pomo $VERSION" \
-            --notes "Windows: download Pomo-Setup-$VERSION.exe and run it. Mac: download the .dmg (arm64 for Apple Silicon, x64 for Intel). Installing over an older version keeps your settings and to-do list."
+            --notes "Windows: download Pomo-Setup-$VERSION.exe and run it. Once installed, Pomo updates itself. Mac: download the .dmg (arm64 for Apple Silicon, x64 for Intel). Updating keeps your settings and to-do list."

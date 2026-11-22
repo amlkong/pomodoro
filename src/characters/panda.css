@@ -1,0 +1,92 @@
+/* Maple the red panda's moves. A pose class sits on the wrapper around the SVG:
+   .walking .dancing .sitting .jumping .held, plus .armsup and .wiggling */
+.r-all { transform-origin: 50% 100%; }
+.r-body { transform-origin: 50% 100%; animation: r-breathe 3s ease-in-out infinite; }
+.r-head { transform-origin: 50% 90%; }
+.r-eyes { transform-origin: 50% 50%; animation: r-blink 4.8s infinite; }
+.r-tail { transform-origin: 0% 100%; animation: r-sway 2.8s ease-in-out infinite; }
+.r-arm { transform-origin: 50% 8%; }
+.r-zz { opacity: 0; }
+
+@keyframes r-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
+@keyframes r-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+@keyframes r-sway { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(-9deg); } }
+
+/* walking */
+.walking .r-all { animation: r-waddle .4s ease-in-out infinite; }
+.walking .r-foot-l { animation: r-step .4s ease-in-out infinite; }
+.walking .r-foot-r { animation: r-step .4s ease-in-out infinite -.2s; }
+.walking .r-arm-l { animation: r-swing .4s ease-in-out infinite; }
+.walking .r-arm-r { animation: r-swing .4s ease-in-out infinite reverse; }
+@keyframes r-waddle { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-2px); } }
+@keyframes r-step { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes r-swing { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+
+/* dancing */
+.dancing .r-all { animation: r-groove .9s ease-in-out infinite; }
+.dancing .r-arm-l { animation: r-wave-l .45s ease-in-out infinite alternate; }
+.dancing .r-arm-r { animation: r-wave-r .45s ease-in-out infinite alternate-reverse; }
+.dancing .r-foot-l { animation: r-step .45s ease-in-out infinite; }
+.dancing .r-foot-r { animation: r-step .45s ease-in-out infinite -.22s; }
+.dancing .r-head { animation: r-bop .45s ease-in-out infinite alternate; }
+.dancing .r-tail { animation: r-sway .4s ease-in-out infinite; }
+.dancing .r-mouth, .jumping .r-mouth, .held .r-mouth, .armsup .r-mouth { d: path("M66 77.5 Q70 85 74 77.5 Z"); fill: #8a3f3f; }
+@keyframes r-groove {
+  0%, 100% { transform: rotate(-7deg) translateY(0); }
+  25% { transform: rotate(0deg) translateY(-6px); }
+  50% { transform: rotate(7deg) translateY(0); }
+  75% { transform: rotate(0deg) translateY(-6px); }
+}
+@keyframes r-wave-l { from { transform: rotate(140deg); } to { transform: rotate(85deg); } }
+@keyframes r-wave-r { from { transform: rotate(-140deg); } to { transform: rotate(-85deg); } }
+@keyframes r-bop { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+
+/* sitting: curled up asleep through focus time */
+.sitting .r-all { transform: translateY(8px) scale(1.06, .92); }
+.sitting .r-foot-l { transform: translate(-10px, -3px); }
+.sitting .r-foot-r { transform: translate(10px, -3px); }
+.sitting .r-arm-l { transform: rotate(-18deg); }
+.sitting .r-arm-r { transform: rotate(18deg); }
+.sitting .r-body { animation: r-breathe-deep 4.5s ease-in-out infinite; }
+.sitting .r-head { transform: translateY(6px) rotate(-4deg); }
+.sitting .r-eyes { animation: none; transform: scaleY(.1); }
+.sitting .r-tail { animation: none; transform: rotate(14deg); }
+.sitting .r-zz { animation: r-zz 3s ease-in-out infinite; }
+@keyframes r-breathe-deep { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .96); } }
+@keyframes r-zz { 0% { opacity: 0; transform: translate(-4px, 8px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -10px); } }
+
+/* armsup: the classic "I am very big and scary" red panda pose */
+.armsup .r-all { animation: r-tall 1.8s ease-in-out both; }
+.armsup .r-arm-l { animation: r-up-l 1.8s ease-in-out both; }
+.armsup .r-arm-r { animation: r-up-r 1.8s ease-in-out both; }
+.armsup .r-eyes { animation: none; transform: scale(1.15); }
+@keyframes r-tall { 0%, 100% { transform: scale(1, 1); } 20%, 80% { transform: scale(.95, 1.09); } 35%, 65% { transform: scale(.95, 1.09) rotate(-3deg); } 50% { transform: scale(.95, 1.09) rotate(3deg); } }
+@keyframes r-up-l { 0%, 100% { transform: rotate(0); } 20%, 80% { transform: rotate(165deg); } }
+@keyframes r-up-r { 0%, 100% { transform: rotate(0); } 20%, 80% { transform: rotate(-165deg); } }
+
+/* wiggling: happy tail and a head tilt */
+.wiggling .r-tail { animation: r-sway .28s ease-in-out infinite; }
+.wiggling .r-head { animation: r-tilt 1.6s ease-in-out both; }
+.wiggling .r-all { animation: r-shimmy .28s ease-in-out infinite; }
+.wiggling .r-eyes { animation: none; transform: scaleY(.1); }
+@keyframes r-tilt { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(-10deg); } }
+@keyframes r-shimmy { 0%, 100% { transform: translateX(-1.5px); } 50% { transform: translateX(1.5px); } }
+
+/* jumping: celebrating */
+.jumping .r-all { animation: r-jump .5s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
+.jumping .r-arm-l { transform: rotate(150deg); }
+.jumping .r-arm-r { transform: rotate(-150deg); }
+.jumping .r-tail { animation: r-sway .3s ease-in-out infinite; }
+.jumping .r-shadow { transform-origin: 50% 50%; animation: r-shadow .5s ease-in-out infinite alternate; }
+@keyframes r-jump { from { transform: translateY(0) scale(1.05, .94); } to { transform: translateY(-30px) scale(.97, 1.04); } }
+@keyframes r-shadow { from { transform: scale(1); } to { transform: scale(.6); opacity: .5; } }
+
+/* held: picked up */
+.held .r-shadow { opacity: 0; }
+.held .r-foot-l { animation: r-kick .22s ease-in-out infinite alternate; }
+.held .r-foot-r { animation: r-kick .22s ease-in-out infinite alternate-reverse; }
+.held .r-arm-l { transform: rotate(120deg); }
+.held .r-arm-r { transform: rotate(-120deg); }
+.held .r-eyes { animation: none; transform: scale(1.15); }
+.held .r-tail { animation: r-sway .3s ease-in-out infinite; }
+@keyframes r-kick { from { transform: translateY(0); } to { transform: translateY(6px); } }

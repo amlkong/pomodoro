@@ -54,7 +54,7 @@ window.CHARACTERS.cat = {
     </g>
     <g class="c-head">
       <g class="c-ear c-ear-l"><path d="M39 50 L41 24 L63 39 Z" fill="#2f2723"/><path d="M44.5 45 L45.5 32 L57 40 Z" fill="#cfa9a0"/></g>
-      <g class="c-ear c-ear-r"><path d="M101 50 L101 15 L77 39 Z" fill="#2f2723"/><path d="M97 45 L97 28 L84 40 Z" fill="#cfa9a0"/></g>
+      <g class="c-ear c-ear-r"><path d="M101 50 L99 24 L77 39 Z" fill="#2f2723"/><path d="M95.5 45 L94.5 32 L83 40 Z" fill="#cfa9a0"/></g>
       <ellipse cx="70" cy="62" rx="35" ry="28" fill="#8c7a66"/>
       <path d="M54 39 Q70 31 86 39 Q70 37 54 39 Z" fill="#2f2723"/>
       <path d="M62 37 L63 49 M70 36 L70 50 M78 37 L77 49" stroke="#2f2723" stroke-width="3" stroke-linecap="round"/>

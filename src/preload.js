@@ -19,5 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   clearDoneTasks: send('tasks:clearDone'),
   petHover: send('pet:hover'),
   minimize: send('win:minimize'),
+  maximize: send('win:maximize'),
+  applyUpdate: send('update:apply'),
   close: send('win:close'),
 });

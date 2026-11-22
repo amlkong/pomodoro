@@ -56,7 +56,17 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Pomo",
       "runAfterFinish": true
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "amlkong",
+        "repo": "pomodoro"
+      }
+    ]
   },
-  "author": "amlkong"
+  "author": "amlkong",
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
 }
