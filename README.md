@@ -20,16 +20,25 @@ Every change to this repo automatically builds fresh installers.
 
 Those one-time prompts show up because the app isn't signed with a paid Apple or Microsoft developer certificate. That's normal for personal apps.
 
-### Or run it from the code
+### Or: always-up-to-date mode (no reinstalling)
 
-You need [Node.js](https://nodejs.org) (18 or newer). Same steps on Mac and Windows:
+If you're still changing things often, skip the installer. Keep a copy of the code and open Pomo with a launcher that pulls the newest version every time.
 
-```bash
-git clone https://github.com/amlkong/pomodoro.git
-cd pomodoro
-npm install
-npm start
-```
+One-time setup:
+
+1. Install [Node.js](https://nodejs.org) (the LTS version) and [Git](https://git-scm.com/downloads). On a Mac, Git is usually there already.
+2. Open Terminal (Mac) or Command Prompt (Windows) and run:
+   ```bash
+   git clone https://github.com/amlkong/pomodoro.git
+   ```
+   That creates a `pomodoro` folder wherever your terminal was, usually your home folder.
+
+From then on, to open Pomo with the latest changes, double-click:
+
+- **Mac:** `start-mac.command` inside the `pomodoro` folder
+- **Windows:** `start-windows.bat` inside the `pomodoro` folder
+
+A small terminal window opens alongside the app. Leave it open while you use Pomo; closing it closes Pomo.
 
 `npm run dist` builds an installer for the computer you're on, into `dist/`.
 
