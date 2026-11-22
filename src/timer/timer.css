@@ -20,8 +20,9 @@ header {
 .brand { font-weight: 800; font-size: 18px; letter-spacing: .5px; color: var(--accent); transition: color .5s; }
 #swap {
   -webkit-app-region: no-drag; margin-left: auto; margin-right: 5px; width: 26px; height: 26px; border-radius: 50%;
-  background: var(--soft); font-size: 14px; font-weight: 800; line-height: 1; transition: background .5s, transform .3s;
+  background: var(--soft); display: inline-flex; align-items: center; justify-content: center; transition: background .5s, transform .4s;
 }
+#swap svg { width: 14px; height: 14px; }
 #swap:hover { transform: rotate(180deg); }
 #roam {
   -webkit-app-region: no-drag; margin-right: 4px; padding: 4px 10px; border-radius: 999px;
@@ -79,6 +80,7 @@ input[type="number"], input[type="text"] {
 }
 input[type="number"] { width: 58px; text-align: center; }
 input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+input[type="range"] { width: 130px; accent-color: var(--accent); }
 .wide { width: 100%; padding: 9px; border-radius: 999px; font-weight: 700; font-size: 13.5px; background: var(--soft); margin-top: 3px; }
 .wide.primary { background: var(--accent); margin-bottom: 4px; }
 
@@ -86,7 +88,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 body { position: relative; --pet-w: 78px; --pet-floor: 10px; }
 #pet, #bubble { display: none; }
 body.pet-in #pet, body.pet-in #bubble { display: block; }
-body.pet-in main, body.pet-in #settings { padding-bottom: 104px; }
+body.pet-in main, body.pet-in #settings { padding-bottom: calc(20px + 84px * var(--pet-scale, 1)); }
 body.pet-in .card::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px;
   background: var(--soft); border-radius: 0 0 26px 26px; transition: background .5s;

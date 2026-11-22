@@ -5,7 +5,7 @@ const LABELS = {
   short: ['a little break', 'breathe and stretch', 'paused, no rush'],
   long: ['a long break', 'you earned this', 'paused, no rush'],
 };
-const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
+const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'petScale', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
 
 const mini = $('mini');
 let miniChar = '';
@@ -61,6 +61,7 @@ function render(s) {
   $('msg').textContent = s.spotify.message || '';
 
   renderTasks(s.settings.tasks || []);
+  if (document.activeElement !== $('petScale')) $('petScale').value = s.settings.petScale;
 
   if (!settingsFilled) {
     settingsFilled = true;

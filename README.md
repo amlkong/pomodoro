@@ -2,9 +2,9 @@
 
 A cute pomodoro timer for Windows and Mac. A little animated buddy keeps you company while you work: wandering around when you're idle, settling down quietly while you focus, and dancing when it's break time. It also has a to-do list and can play and pause your Spotify for you.
 
-<p><img src="docs/timer.png" width="220" alt="The timer window with the tabby living inside it"></p>
+<p><img src="docs/timer.png" width="220" alt="The timer window with Daphne the cat living inside it"></p>
 <p><img src="docs/pomo-moves.png" width="640" alt="Pomo the otter's moves"></p>
-<p><img src="docs/tabby-moves.png" width="640" alt="The tabby's moves"></p>
+<p><img src="docs/daphne-moves.png" width="640" alt="Daphne the cat's moves"></p>
 
 ## Contents
 
@@ -68,15 +68,17 @@ If you'd rather not download anything for each update, see [Always-latest mode](
 
 Two buttons at the top of the window control the character:
 
-- **⇄ switches character.** Right now there are two:
+- **The round arrows button switches character.** Right now there are two:
   - 🦦 **Pomo**, a samurai otter. Practices sword moves, bows, and meditates while you focus.
-  - 🐱 **Tabby**, a happy tabby cat. Bats at things, washes a paw, stretches, and naps in a loaf while you focus.
+  - 🐱 **Daphne**, a happy tabby cat. Bats at things, washes a paw, stretches, and naps in a loaf while you focus.
 - **The pill next to it chooses where they live.** Click to cycle:
   - **whole screen**: walks along the bottom of your screen, on top of your other windows. Your clicks pass straight through to whatever is underneath.
   - **in window**: stays inside the timer window on a little floor.
   - **hidden**: goes away until you click again.
 
 Click your buddy for a little hello. You can also pick them up with the mouse, carry them anywhere, and drop them.
+
+**Changing their size:** hover over your buddy and a small round handle appears at the top corner. Drag it up to make them bigger, down to make them smaller. There's also a **Character size** slider in ⚙. The size is remembered.
 
 ## Set up Spotify (optional)
 
@@ -164,7 +166,7 @@ Each character is two files in `src/characters/`:
 
 Every character needs these poses: `walking`, `dancing`, `sitting` (focus time), `jumping` (celebrating) and `held` (picked up). On top of that it can have its own extras, listed in `idleActions` and `breakActions`, like the otter's `slashing` or the cat's `licking`.
 
-To add one, copy `cat.js` and `cat.css`, change the drawing and animations, then add the two files to both `src/timer/index.html` and `src/pet/pet.html` next to the existing ones. The ⇄ button picks it up automatically.
+To add one, copy `cat.js` and `cat.css`, change the drawing and animations, then add the two files to both `src/timer/index.html` and `src/pet/pet.html` next to the existing ones. The switch button picks it up automatically.
 
 ### Project layout
 

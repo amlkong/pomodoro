@@ -1,5 +1,5 @@
-/* The tabby's moves. A pose class sits on the wrapper around the SVG:
-   .walking .dancing .sitting .jumping .held, plus her own .swiping .licking .stretching */
+/* Daphne the tabby's moves. A pose class sits on the wrapper around the SVG:
+   .walking .dancing .sitting .jumping .held, plus .swiping .licking .stretching */
 .c-all { transform-origin: 50% 100%; }
 .c-body { transform-origin: 50% 100%; animation: c-breathe 3.2s ease-in-out infinite; }
 .c-head { transform-origin: 50% 90%; }
@@ -54,7 +54,7 @@
 @keyframes c-breathe-deep { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .96); } }
 @keyframes c-zz { 0% { opacity: 0; transform: translate(-4px, 8px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -10px); } }
 
-/* swiping: batting at something only she can see */
+/* swiping: batting at something nobody else can see */
 .swiping .c-leg-r { animation: c-swipe 1.5s ease-in-out both; }
 .swiping .c-head { animation: c-watch 1.5s ease-in-out both; }
 .swiping .c-eyes { animation: none; transform: scale(1.12); }

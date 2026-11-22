@@ -1,7 +1,7 @@
-// The happy tabby.
+// Daphne the happy tabby.
 window.CHARACTERS = window.CHARACTERS || {};
 window.CHARACTERS.cat = {
-  name: 'Tabby',
+  name: 'Daphne',
   emoji: '🐱',
   idleActions: [{ pose: 'swiping', ms: 1500 }, { pose: 'licking', ms: 2400 }, { pose: 'stretching', ms: 1900 }],
   breakActions: [{ pose: 'swiping', ms: 1500 }],
@@ -53,7 +53,7 @@ window.CHARACTERS.cat = {
       <ellipse cx="80.5" cy="139" rx="9.5" ry="5.5" fill="#ab9981"/>
     </g>
     <g class="c-head">
-      <g class="c-ear c-ear-l"><path d="M39 50 L41 24 L63 39 Z" fill="#7a6a58"/><path d="M44.5 45 L45.5 32 L57 40 Z" fill="#cfa9a0"/></g>
+      <g class="c-ear c-ear-l"><path d="M39 50 L41 24 L63 39 Z" fill="#2f2723"/><path d="M44.5 45 L45.5 32 L57 40 Z" fill="#cfa9a0"/></g>
       <g class="c-ear c-ear-r"><path d="M101 50 L101 15 L77 39 Z" fill="#2f2723"/><path d="M97 45 L97 28 L84 40 Z" fill="#cfa9a0"/></g>
       <ellipse cx="70" cy="62" rx="35" ry="28" fill="#8c7a66"/>
       <path d="M54 39 Q70 31 86 39 Q70 37 54 39 Z" fill="#2f2723"/>

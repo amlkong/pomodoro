@@ -120,7 +120,9 @@
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
 
-    if (drag) {
+    if (resize) {
+      setPose(''); // stand still while being resized
+    } else if (drag) {
       setPose('held');
     } else if (y > 0) {
       vy -= GRAVITY * dt;
@@ -162,6 +164,7 @@
 
   function applyState(s) {
     setCharacter(s.settings.character);
+    if (!resize) setScale(Number(s.settings.petScale) || 1);
     const next = !s.running ? 'idle' : s.phase === 'focus' ? 'focus' : 'break';
     if (next === mode) return;
     mode = next;
@@ -176,7 +179,7 @@
   // In the overlay, clicks only land on Pomo and pass through everywhere else.
   const setHover = (over) => { if (OVERLAY) window.api.petHover(over); };
   pet.addEventListener('mouseenter', () => { hovering = true; setHover(true); });
-  pet.addEventListener('mouseleave', () => { hovering = false; if (!drag) setHover(false); });
+  pet.addEventListener('mouseleave', () => { hovering = false; if (!drag && !resize) setHover(false); });
 
   // Pick him up, carry him around, drop him. A plain click is a poke.
   pet.addEventListener('mousedown', (e) => {
@@ -184,7 +187,31 @@
     e.preventDefault();
     drag = { ox: e.clientX - x, oy: window.innerHeight - e.clientY - y, sx: e.clientX, sy: e.clientY, moved: false };
   });
+  // Resize: a little handle on the top corner, shown on hover. Drag up to grow, down to shrink.
+  const grip = document.createElement('div');
+  grip.id = 'grip';
+  grip.title = 'Drag to resize';
+  grip.textContent = '⤢';
+  pet.appendChild(grip);
+  let resize = null;
+  let scale = 1;
+  function setScale(v) {
+    scale = clamp(v, 0.5, 2.5);
+    document.documentElement.style.setProperty('--pet-scale', scale);
+  }
+  grip.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const bottom = pet.getBoundingClientRect().bottom;
+    resize = { bottom, startHeight: Math.max(10, bottom - e.clientY), startScale: scale };
+  });
+
   document.addEventListener('mousemove', (e) => {
+    if (resize) {
+      setScale(resize.startScale * (resize.bottom - e.clientY) / resize.startHeight);
+      return;
+    }
     if (!drag) return;
     if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 4) {
       drag.moved = true;
@@ -195,6 +222,12 @@
     y = window.innerHeight - e.clientY - drag.oy;
   });
   document.addEventListener('mouseup', () => {
+    if (resize) {
+      resize = null;
+      window.api.updateSettings({ petScale: Math.round(scale * 100) / 100 });
+      if (!hovering) setHover(false);
+      return;
+    }
     if (!drag) return;
     const wasDragged = drag.moved;
     drag = null;

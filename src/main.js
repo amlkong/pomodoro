@@ -10,6 +10,7 @@ const DEFAULTS = {
   longEvery: 4,
   autoStart: true,
   showPet: true,
+  petScale: 1, // character size, 0.5 to 2.5
   character: 'otter', // a file name from src/characters
   petRoam: 'screen', // 'screen' = whole desktop, 'window' = inside the timer window
   musicOnBreaks: false,
@@ -36,6 +37,7 @@ function loadSettings() {
   try {
     settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(settingsFile(), 'utf8')) };
     if (!Array.isArray(settings.tasks)) settings.tasks = [];
+    settings.petScale = Math.min(2.5, Math.max(0.5, Number(settings.petScale) || 1));
   } catch {
     settings = { ...DEFAULTS, tasks: [] };
   }
@@ -153,7 +155,7 @@ function syncMusic() {
 // The timer window grows a little floor for Pomo when he lives inside it.
 const TIMER_W = 340;
 function timerHeight() {
-  const want = settings.showPet && settings.petRoam === 'window' ? 750 : 665;
+  const want = settings.showPet && settings.petRoam === 'window' ? 665 + Math.round(85 * settings.petScale) : 665;
   return Math.min(want, screen.getPrimaryDisplay().workArea.height);
 }
 
@@ -250,6 +252,7 @@ function registerIpc() {
       if (k in patch) settings[k] = Boolean(patch[k]);
     }
     if (patch.petRoam === 'screen' || patch.petRoam === 'window') settings.petRoam = patch.petRoam;
+    if ('petScale' in patch) settings.petScale = Math.min(2.5, Math.max(0.5, Number(patch.petScale) || 1));
     if (typeof patch.character === 'string' && /^[a-z0-9-]{1,30}$/.test(patch.character)) settings.character = patch.character;
     if ('spotifyPlaylist' in patch) {
       settings.spotifyPlaylist = String(patch.spotifyPlaylist || '').trim();
