@@ -19,7 +19,7 @@
     if (id === charId) return;
     charId = id;
     char = window.CHARACTERS[id];
-    flip.innerHTML = window.characterMarkup(char);
+    window.mountCharacter(flip, char);
     flip.classList.remove('left');
     flip.classList.toggle('img-char', Boolean(char.frames));
     showFrames();
@@ -68,8 +68,13 @@
     if (!img) return;
     const list = char.frames[pose] || char.frames.idle;
     let i = 0;
-    img.src = list[0];
-    if (list.length > 1) frameTimer = setInterval(() => { i = (i + 1) % list.length; img.src = list[i]; }, 160);
+    window.showCharacterFrame(img, char, list[0]);
+    if (list.length > 1) {
+      frameTimer = setInterval(() => {
+        i = (i + 1) % list.length;
+        window.showCharacterFrame(img, char, list[i]);
+      }, 160);
+    }
   }
 
   function act(p, ms) {

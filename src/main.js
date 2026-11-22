@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Notification, screen, shell, safeStorage } 
 const path = require('path');
 const fs = require('fs');
 const spotify = require('./spotify');
+const { loadCustomCharacters } = require('./custom-characters');
 
 const DEFAULTS = {
   focusMin: 25,
@@ -75,88 +76,8 @@ function writeRefreshToken(token) {
 }
 
 // ---------- custom characters ----------
-// Picture-based characters live in a folder in the user's own app data, one
-// sub-folder per character. They are read from disk at startup and are never
-// part of the app or the repo.
+// Picture-based characters the user keeps in their own app-data folder.
 const customDir = () => path.join(app.getPath('userData'), 'characters');
-const IMAGE_TYPES = { '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' };
-const HOW_TO = `Add your own characters to Pomo
-================================
-
-1. In this folder, make a new folder for your character. Its name is the
-   character's name, for example:  Biscuit
-
-2. Put pictures inside it, named after poses. PNG with a see-through
-   background looks best. The character should face RIGHT.
-
-     idle.png     standing around          (the only one you must have)
-     walk.png     moving
-     dance.png    break time
-     sleep.png    focus time
-     happy.png    celebrating
-     held.png     being picked up
-
-   Any pose you leave out just uses idle.png.
-
-3. Want real animation? Number the frames and Pomo flips through them:
-     walk-1.png  walk-2.png  walk-3.png
-
-4. Any other picture becomes a little moment your character does now and
-   then, for example:  sad.png  confused.png  wave.png
-
-5. Close Pomo and open it again. Your character is now in the character menu.
-
-Optional: add a file called character.json to set what they say:
-  { "name": "Biscuit", "emoji": "🍪", "lines": { "pokes": ["hi!", "woof"] } }
-
-Keep each picture under 3 MB. Roughly square pictures around 300 to 600
-pixels tall work well.
-`;
-
-function loadCustomCharacters() {
-  const dir = customDir();
-  try {
-    fs.mkdirSync(dir, { recursive: true });
-    const howTo = path.join(dir, 'HOW-TO.txt');
-    if (!fs.existsSync(howTo)) fs.writeFileSync(howTo, HOW_TO);
-  } catch {
-    return [];
-  }
-  const packs = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (!entry.isDirectory() || packs.length >= 30) continue;
-    const slug = entry.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24);
-    if (!slug) continue;
-    const folder = path.join(dir, entry.name);
-    const pack = { id: `my-${slug}`, name: entry.name.slice(0, 24), frames: {} };
-    try {
-      const files = fs.readdirSync(folder).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).slice(0, 80);
-      for (const file of files) {
-        const ext = path.extname(file).toLowerCase();
-        if (file.toLowerCase() === 'character.json') {
-          const info = JSON.parse(fs.readFileSync(path.join(folder, file), 'utf8'));
-          if (typeof info.name === 'string' && info.name.trim()) pack.name = info.name.trim().slice(0, 24);
-          if (typeof info.emoji === 'string') pack.emoji = info.emoji.slice(0, 4);
-          if (info.lines && typeof info.lines === 'object') pack.lines = info.lines;
-          continue;
-        }
-        if (!IMAGE_TYPES[ext]) continue;
-        const full = path.join(folder, file);
-        if (fs.statSync(full).size > 3 * 1024 * 1024) continue;
-        // "walk-2.png" -> pose "walk"; frames stay in numeric order
-        const pose = path.basename(file, ext).toLowerCase().replace(/[-_ ]?\d+$/, '').replace(/[^a-z0-9]+/g, '-');
-        if (!pose) continue;
-        const data = `data:${IMAGE_TYPES[ext]};base64,${fs.readFileSync(full).toString('base64')}`;
-        (pack.frames[pose] = pack.frames[pose] || []).push(data);
-      }
-    } catch (e) {
-      console.error(`Skipping custom character "${entry.name}":`, e.message);
-      continue;
-    }
-    if (pack.frames.idle) packs.push(pack);
-  }
-  return packs;
-}
 
 // ---------- timer ----------
 const durationMs = (phase) => settings[DURATION_KEY[phase]] * 60 * 1000;
@@ -314,10 +235,16 @@ function clampInt(v, min, max, fallback) {
 
 function registerIpc() {
   ipcMain.handle('state:get', () => publicState());
-  ipcMain.handle('characters:custom', () => loadCustomCharacters());
+  ipcMain.handle('characters:custom', () => loadCustomCharacters(customDir()));
   ipcMain.on('characters:openFolder', () => {
-    loadCustomCharacters(); // makes sure the folder and its HOW-TO exist
+    loadCustomCharacters(customDir()); // makes sure the folder and its HOW-TO exist
     shell.openPath(customDir());
+  });
+  // re-read the folder: both windows reload and pick the characters up again
+  ipcMain.on('characters:reload', () => {
+    for (const w of [timerWin, petWin]) {
+      if (w && !w.isDestroyed()) w.webContents.reload();
+    }
   });
 
   ipcMain.on('timer:toggle', () => setRunning(!state.running));

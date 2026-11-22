@@ -1,3 +1,8 @@
 node_modules/
 dist/
 .DS_Store
+
+# Personal character pictures stay on your own computer, never in the repo
+local-characters/
+pomo_custom_characters*/
+*.zip

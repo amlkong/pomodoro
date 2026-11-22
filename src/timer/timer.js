@@ -40,7 +40,7 @@ function render(s) {
   const char = window.CHARACTERS[charId];
   if (charId !== miniChar) {
     miniChar = charId;
-    mini.innerHTML = window.characterMarkup(char);
+    window.mountCharacter(mini, char);
     mini.classList.toggle('img-char', Boolean(char.frames));
   }
   $('roam').textContent = `${char.emoji} ${{ screen: 'on screen', window: 'in window', hidden: 'hidden' }[where]}`;
@@ -55,7 +55,13 @@ function render(s) {
       : `✨ Version ${s.update.version} is out · download`;
   }
 
-  mini.className = 'mini ' + (char.frames ? 'img-char ' : '') + (!s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing');
+  const miniPose = !s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing';
+  mini.className = 'mini ' + (char.frames ? 'img-char ' : '') + miniPose;
+  if (char.frames && mini.dataset.pose !== `${charId}:${miniPose}`) {
+    mini.dataset.pose = `${charId}:${miniPose}`;
+    const img = mini.querySelector('.char-img');
+    if (img) window.showCharacterFrame(img, char, (char.frames[miniPose] || char.frames.idle)[0]);
+  }
 
   // one dot per focus round until the next long break
   const every = s.settings.longEvery;
@@ -138,7 +144,7 @@ function buildCharMenu() {
     item.className = id === miniChar ? 'on' : '';
     const pic = document.createElement('span');
     pic.className = 'pic';
-    pic.innerHTML = window.characterMarkup(c);
+    window.mountCharacter(pic, c);
     const name = document.createElement('span');
     name.textContent = c.name;
     item.append(pic, name);
@@ -149,7 +155,7 @@ function buildCharMenu() {
     charMenu.append(item);
   }
   const add = document.createElement('button');
-  add.className = 'add';
+  add.className = 'add first';
   add.textContent = '＋ Add your own…';
   add.title = 'Opens the folder where you can drop in your own character pictures';
   add.onclick = () => {
@@ -157,6 +163,12 @@ function buildCharMenu() {
     window.api.openCharactersFolder();
   };
   charMenu.append(add);
+  const refresh = document.createElement('button');
+  refresh.className = 'add';
+  refresh.textContent = '↻ Refresh list';
+  refresh.title = 'Re-read your own characters after adding or changing pictures';
+  refresh.onclick = () => window.api.reloadCharacters();
+  charMenu.append(refresh);
 }
 $('swap').onclick = (e) => {
   e.stopPropagation();
