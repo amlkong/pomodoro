@@ -1,0 +1,101 @@
+/* Ash the wolf pup's moves. A pose class sits on the wrapper around the SVG:
+   .walking .dancing .sitting .jumping .held, plus .howling and .pouncing */
+.w-all { transform-origin: 50% 100%; }
+.w-body { transform-origin: 50% 100%; animation: w-breathe 3s ease-in-out infinite; }
+.w-head { transform-origin: 50% 92%; }
+.w-eyes { transform-origin: 50% 50%; animation: w-blink 4.6s infinite; }
+.w-tail { transform-origin: 0% 100%; animation: w-wag 1.4s ease-in-out infinite; }
+.w-ear-l { transform-origin: 70% 100%; animation: w-twitch 7s infinite; }
+.w-leg { transform-origin: 50% 0%; }
+.w-tongue, .w-zz, .w-awoo { opacity: 0; }
+
+@keyframes w-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
+@keyframes w-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+@keyframes w-wag { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-12deg); } }
+@keyframes w-twitch { 0%, 90%, 94%, 100% { transform: rotate(0); } 92% { transform: rotate(-12deg); } }
+
+/* walking: a bouncy trot */
+.walking .w-all { animation: w-trot .36s ease-in-out infinite; }
+.walking .w-leg-l { animation: w-pad .36s ease-in-out infinite; }
+.walking .w-leg-r { animation: w-pad .36s ease-in-out infinite -.18s; }
+.walking .w-foot-l { animation: w-pad-small .36s ease-in-out infinite -.18s; }
+.walking .w-foot-r { animation: w-pad-small .36s ease-in-out infinite; }
+.walking .w-tail { animation: w-wag .5s ease-in-out infinite; }
+@keyframes w-trot { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-3px); } }
+@keyframes w-pad { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes w-pad-small { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+/* dancing: paws up, tongue out */
+.dancing .w-all { animation: w-groove .9s ease-in-out infinite; }
+.dancing .w-leg-l { animation: w-paw-up-l .45s ease-in-out infinite alternate; }
+.dancing .w-leg-r { animation: w-paw-up-r .45s ease-in-out infinite alternate-reverse; }
+.dancing .w-head { animation: w-bop .45s ease-in-out infinite alternate; }
+.dancing .w-tail { animation: w-wag .3s ease-in-out infinite; }
+.dancing .w-tongue, .jumping .w-tongue, .pouncing .w-tongue { opacity: 1; }
+@keyframes w-groove {
+  0%, 100% { transform: rotate(-7deg) translateY(0); }
+  25% { transform: rotate(0deg) translateY(-6px); }
+  50% { transform: rotate(7deg) translateY(0); }
+  75% { transform: rotate(0deg) translateY(-6px); }
+}
+@keyframes w-paw-up-l { from { transform: translate(-6px, -4px) rotate(25deg); } to { transform: translate(-16px, -26px) rotate(60deg); } }
+@keyframes w-paw-up-r { from { transform: translate(6px, -4px) rotate(-25deg); } to { transform: translate(16px, -26px) rotate(-60deg); } }
+@keyframes w-bop { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+
+/* sitting: curled up asleep through focus time */
+.sitting .w-all { transform: translateY(8px) scale(1.08, .9); }
+.sitting .w-leg { transform: translateY(-10px) scaleY(.45); }
+.sitting .w-body { animation: w-breathe-deep 4.5s ease-in-out infinite; }
+.sitting .w-head { transform: translateY(8px) rotate(-5deg); }
+.sitting .w-eyes { animation: none; transform: scaleY(.1); }
+.sitting .w-ear-l { animation-duration: 10s; }
+.sitting .w-tail { animation: none; transform: rotate(20deg) translateY(4px); }
+.sitting .w-zz { animation: w-zz 3s ease-in-out infinite; }
+@keyframes w-breathe-deep { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .96); } }
+@keyframes w-zz { 0% { opacity: 0; transform: translate(-4px, 10px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -8px); } }
+
+/* howling: head back, a long awoo */
+.howling .w-head { animation: w-howl 2.2s ease-in-out both; }
+.howling .w-all { animation: w-howl-body 2.2s ease-in-out both; }
+.howling .w-eyes { animation: none; transform: scaleY(.1); }
+.howling .w-mouth { d: path("M66.500 76 Q70 86 73.500 76 Q70 73.500 66.500 76 Z"); fill: #2a2d38; }
+.howling .w-awoo { animation: w-awoo 2.2s ease-out both; }
+.howling .w-tail { animation: w-wag .6s ease-in-out infinite; }
+@keyframes w-howl { 0%, 100% { transform: rotate(0) translateY(0); } 22%, 80% { transform: rotate(-24deg) translateY(-3px); } }
+@keyframes w-howl-body { 0%, 100% { transform: scale(1, 1); } 22%, 80% { transform: scale(.97, 1.05); } }
+@keyframes w-awoo { 0%, 22% { opacity: 0; transform: translate(-6px, 8px) scale(.6); } 40%, 70% { opacity: 1; transform: translate(0, 0) scale(1); } 90%, 100% { opacity: 0; transform: translate(6px, -8px) scale(1.1); } }
+
+/* pouncing: wiggle down low, then spring */
+.pouncing .w-all { animation: w-pounce 1.5s ease-in-out both; }
+.pouncing .w-tail { animation: w-wag .22s ease-in-out infinite; }
+.pouncing .w-eyes { animation: none; transform: scale(1.12); }
+.pouncing .w-leg-l { animation: w-pounce-paws 1.5s ease-in-out both; }
+.pouncing .w-leg-r { animation: w-pounce-paws 1.5s ease-in-out both; }
+@keyframes w-pounce {
+  0%, 100% { transform: translate(0, 0) scale(1, 1); }
+  15%, 45% { transform: translate(-3px, 0) scale(1.12, .84); }
+  30% { transform: translate(3px, 0) scale(1.12, .84); }
+  62% { transform: translate(6px, -28px) scale(.95, 1.08); }
+  80% { transform: translate(4px, 0) scale(1.08, .92); }
+}
+@keyframes w-pounce-paws { 0%, 50%, 80%, 100% { transform: translateY(0); } 62% { transform: translate(6px, -8px) rotate(-30deg); } }
+
+/* jumping: celebrating */
+.jumping .w-all { animation: w-jump .5s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
+.jumping .w-leg-l { transform: translate(-14px, -22px) rotate(55deg); }
+.jumping .w-leg-r { transform: translate(14px, -22px) rotate(-55deg); }
+.jumping .w-tail { animation: w-wag .25s ease-in-out infinite; }
+.jumping .w-shadow { transform-origin: 50% 50%; animation: w-shadow .5s ease-in-out infinite alternate; }
+@keyframes w-jump { from { transform: translateY(0) scale(1.05, .94); } to { transform: translateY(-32px) scale(.97, 1.04); } }
+@keyframes w-shadow { from { transform: scale(1); } to { transform: scale(.6); opacity: .5; } }
+
+/* held: scooped up, paws dangling */
+.held .w-shadow { opacity: 0; }
+.held .w-all { transform: scale(.94, 1.08); }
+.held .w-leg-l { animation: w-dangle .25s ease-in-out infinite alternate; }
+.held .w-leg-r { animation: w-dangle .25s ease-in-out infinite alternate-reverse; }
+.held .w-foot-l { animation: w-pad-small .25s ease-in-out infinite; }
+.held .w-foot-r { animation: w-pad-small .25s ease-in-out infinite -.12s; }
+.held .w-eyes { animation: none; transform: scale(1.18); }
+.held .w-tail { animation: w-wag .3s ease-in-out infinite; }
+@keyframes w-dangle { from { transform: translateY(2px) rotate(-6deg); } to { transform: translateY(8px) rotate(6deg); } }

@@ -6,6 +6,7 @@ A cute pomodoro timer for Windows and Mac. A little animated buddy keeps you com
 <p><img src="docs/pomo-moves.png" width="640" alt="Pomo the otter's moves"></p>
 <p><img src="docs/daphne-moves.png" width="640" alt="Daphne the cat's moves"></p>
 <p><img src="docs/maple-moves.png" width="640" alt="Maple the red panda's moves"></p>
+<p><img src="docs/ash-moves.png" width="640" alt="Ash the wolf pup's moves"></p>
 
 ## Contents
 
@@ -74,6 +75,7 @@ Two buttons at the top of the window control the character:
   - 🦦 **Pomo**, a samurai otter. Practices sword moves, bows, and meditates while you focus.
   - 🐱 **Daphne**, a happy tabby cat. Bats at things, washes a paw, stretches, and naps in a loaf while you focus.
   - 🍁 **Maple**, a red panda. Does the famous arms-up "I'm very scary" pose, wiggles, and curls up asleep while you focus.
+  - 🐺 **Ash**, a fluffy grey wolf pup. Throws his head back and howls, wiggles down and pounces, and curls up asleep while you focus.
 - **The pill next to it chooses where they live.** Click to cycle:
   - **on screen**: walks along the bottom of your screen, on top of your other windows. Your clicks pass straight through to whatever is underneath.
   - **in window**: stays inside the timer window on a little floor.
