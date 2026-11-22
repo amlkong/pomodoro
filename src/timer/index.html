@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
 <title>Pomo</title>
-<link rel="stylesheet" href="../pomo.css">
+<link rel="stylesheet" href="../characters/otter.css">
+<link rel="stylesheet" href="../characters/cat.css">
 <link rel="stylesheet" href="../pet/pet.css">
 <link rel="stylesheet" href="timer.css">
 </head>
@@ -12,7 +13,8 @@
 <div class="card">
   <header>
     <span class="brand">pomo</span>
-    <button id="roam" title="Where Pomo lives: whole screen, inside this window, or hidden"></button>
+    <button id="swap" aria-label="Switch character">⇄</button>
+    <button id="roam" title="Where your buddy lives: whole screen, inside this window, or hidden"></button>
     <span class="win">
       <button id="gear" title="Settings" aria-label="Settings">⚙</button>
       <button id="min" title="Minimize" aria-label="Minimize">–</button>
@@ -84,7 +86,8 @@
 </div>
 <div id="pet"><div id="flip"></div></div>
 <div id="bubble"></div>
-<script src="../pomo.js"></script>
+<script src="../characters/otter.js"></script>
+<script src="../characters/cat.js"></script>
 <script src="timer.js"></script>
 <script src="../pet/pet.js"></script>
 </body>

@@ -1,0 +1,109 @@
+/* The tabby's moves. A pose class sits on the wrapper around the SVG:
+   .walking .dancing .sitting .jumping .held, plus her own .swiping .licking .stretching */
+.c-all { transform-origin: 50% 100%; }
+.c-body { transform-origin: 50% 100%; animation: c-breathe 3.2s ease-in-out infinite; }
+.c-head { transform-origin: 50% 90%; }
+.c-eyes { transform-origin: 50% 50%; animation: c-blink 5s infinite; }
+.c-tail { transform-origin: 0% 100%; animation: c-swish 2.6s ease-in-out infinite; }
+.c-ear-r { transform-origin: 30% 100%; animation: c-twitch 6s infinite; }
+.c-leg { transform-origin: 50% 0%; }
+.c-zz { opacity: 0; }
+
+@keyframes c-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
+@keyframes c-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+@keyframes c-swish { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(-12deg); } }
+@keyframes c-twitch { 0%, 90%, 94%, 100% { transform: rotate(0); } 92% { transform: rotate(12deg); } }
+
+/* walking: a little waddle */
+.walking .c-all { animation: c-waddle .42s ease-in-out infinite; }
+.walking .c-leg-l { animation: c-pad .42s ease-in-out infinite; }
+.walking .c-leg-r { animation: c-pad .42s ease-in-out infinite -.21s; }
+.walking .c-hind-l { animation: c-pad-small .42s ease-in-out infinite -.21s; }
+.walking .c-hind-r { animation: c-pad-small .42s ease-in-out infinite; }
+.walking .c-tail { animation: c-swish .84s ease-in-out infinite; }
+@keyframes c-waddle { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-2px); } }
+@keyframes c-pad { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes c-pad-small { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, -3px); } }
+
+/* dancing: paws in the air */
+.dancing .c-all { animation: c-groove .9s ease-in-out infinite; }
+.dancing .c-leg-l { animation: c-paw-up-l .45s ease-in-out infinite alternate; }
+.dancing .c-leg-r { animation: c-paw-up-r .45s ease-in-out infinite alternate-reverse; }
+.dancing .c-head { animation: c-bop .45s ease-in-out infinite alternate; }
+.dancing .c-tail { animation: c-swish .4s ease-in-out infinite; }
+.dancing .c-mouth, .jumping .c-mouth, .held .c-mouth, .stretching .c-mouth { d: path("M66 78 Q70 85 74 78 Z"); fill: #8a3f3f; }
+@keyframes c-groove {
+  0%, 100% { transform: rotate(-7deg) translateY(0); }
+  25% { transform: rotate(0deg) translateY(-6px); }
+  50% { transform: rotate(7deg) translateY(0); }
+  75% { transform: rotate(0deg) translateY(-6px); }
+}
+@keyframes c-paw-up-l { from { transform: translate(-6px, -4px) rotate(25deg); } to { transform: translate(-16px, -26px) rotate(60deg); } }
+@keyframes c-paw-up-r { from { transform: translate(6px, -4px) rotate(-25deg); } to { transform: translate(16px, -26px) rotate(-60deg); } }
+@keyframes c-bop { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+
+/* sitting: a loaf-shaped nap through focus time */
+.sitting .c-all { transform: translateY(7px) scale(1.07, .92); }
+.sitting .c-leg { transform: translateY(-9px) scaleY(.5); }
+.sitting .c-body { animation: c-breathe-deep 4.5s ease-in-out infinite; }
+.sitting .c-head { transform: translateY(5px); }
+.sitting .c-eyes { animation: none; transform: scaleY(.1); }
+.sitting .c-tail { animation-duration: 6s; }
+.sitting .c-ear-r { animation-duration: 9s; }
+.sitting .c-zz { animation: c-zz 3s ease-in-out infinite; }
+@keyframes c-breathe-deep { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .96); } }
+@keyframes c-zz { 0% { opacity: 0; transform: translate(-4px, 8px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -10px); } }
+
+/* swiping: batting at something only she can see */
+.swiping .c-leg-r { animation: c-swipe 1.5s ease-in-out both; }
+.swiping .c-head { animation: c-watch 1.5s ease-in-out both; }
+.swiping .c-eyes { animation: none; transform: scale(1.12); }
+.swiping .c-tail { animation: c-swish .35s ease-in-out infinite; }
+@keyframes c-swipe {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  22% { transform: translate(10px, -30px) rotate(-35deg); }
+  36%, 64% { transform: translate(22px, -36px) rotate(-75deg); }
+  50%, 78% { transform: translate(8px, -32px) rotate(-25deg); }
+}
+@keyframes c-watch { 0%, 100% { transform: rotate(0); } 22%, 78% { transform: rotate(7deg); } }
+
+/* licking: washing a paw */
+.licking .c-leg-l { animation: c-lick-paw 2.4s ease-in-out both; }
+.licking .c-head { animation: c-lick-head 2.4s ease-in-out both; }
+.licking .c-eyes { animation: none; transform: scaleY(.1); }
+@keyframes c-lick-paw {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  18%, 82% { transform: translate(4px, -34px) rotate(22deg); }
+  34%, 66% { transform: translate(4px, -38px) rotate(22deg); }
+  50% { transform: translate(4px, -34px) rotate(22deg); }
+}
+@keyframes c-lick-head {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  18%, 50%, 82% { transform: rotate(-9deg) translateY(4px); }
+  34%, 66% { transform: rotate(-9deg) translateY(1px); }
+}
+
+/* stretching: a long one, with a yawn */
+.stretching .c-all { animation: c-stretch 1.9s ease-in-out both; }
+.stretching .c-tail { animation: c-tail-up 1.9s ease-in-out both; }
+.stretching .c-eyes { animation: none; transform: scaleY(.1); }
+@keyframes c-stretch { 0%, 100% { transform: scale(1, 1); } 30%, 70% { transform: scale(1.2, .8); } }
+@keyframes c-tail-up { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(-45deg); } }
+
+/* jumping: celebrating */
+.jumping .c-all { animation: c-jump .5s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
+.jumping .c-leg-l { transform: translate(-14px, -22px) rotate(55deg); }
+.jumping .c-leg-r { transform: translate(14px, -22px) rotate(-55deg); }
+.jumping .c-tail { animation: c-swish .3s ease-in-out infinite; }
+.jumping .c-shadow { transform-origin: 50% 50%; animation: c-shadow .5s ease-in-out infinite alternate; }
+@keyframes c-jump { from { transform: translateY(0) scale(1.05, .94); } to { transform: translateY(-30px) scale(.97, 1.04); } }
+@keyframes c-shadow { from { transform: scale(1); } to { transform: scale(.6); opacity: .5; } }
+
+/* held: picked up, paws dangling */
+.held .c-shadow { opacity: 0; }
+.held .c-all { transform: scale(.94, 1.08); }
+.held .c-leg-l { animation: c-dangle .25s ease-in-out infinite alternate; }
+.held .c-leg-r { animation: c-dangle .25s ease-in-out infinite alternate-reverse; }
+.held .c-eyes { animation: none; transform: scale(1.18); }
+.held .c-tail { animation: c-swish .3s ease-in-out infinite; }
+@keyframes c-dangle { from { transform: translateY(2px) rotate(-6deg); } to { transform: translateY(8px) rotate(6deg); } }

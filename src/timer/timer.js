@@ -8,7 +8,7 @@ const LABELS = {
 const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
 
 const mini = $('mini');
-mini.innerHTML = window.POMO_SVG;
+let miniChar = '';
 let current = null;
 let settingsFilled = false;
 let tasksKey = '';
@@ -36,7 +36,14 @@ function render(s) {
   // the little Pomo in the ring mirrors what the big one is doing
   const where = !s.settings.showPet ? 'hidden' : s.settings.petRoam;
   document.body.classList.toggle('pet-in', where === 'window');
-  $('roam').textContent = { screen: '🦦 whole screen', window: '🦦 in window', hidden: '🦦 hidden' }[where];
+  const charId = window.CHARACTERS[s.settings.character] ? s.settings.character : Object.keys(window.CHARACTERS)[0];
+  const char = window.CHARACTERS[charId];
+  if (charId !== miniChar) {
+    miniChar = charId;
+    mini.innerHTML = char.svg;
+  }
+  $('roam').textContent = `${char.emoji} ${{ screen: 'whole screen', window: 'in window', hidden: 'hidden' }[where]}`;
+  $('swap').title = `Switch character (now: ${char.name})`;
 
   mini.className = 'mini ' + (!s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing');
 
@@ -108,6 +115,12 @@ $('roam').onclick = () => {
   if (!showPet) window.api.updateSettings({ showPet: true, petRoam: 'screen' });
   else if (petRoam === 'screen') window.api.updateSettings({ petRoam: 'window' });
   else window.api.updateSettings({ showPet: false });
+};
+// cycle through every character in src/characters
+$('swap').onclick = () => {
+  const ids = Object.keys(window.CHARACTERS);
+  const next = ids[(ids.indexOf(miniChar) + 1) % ids.length];
+  window.api.updateSettings({ character: next, ...(current && !current.settings.showPet ? { showPet: true } : {}) });
 };
 $('toggle').onclick = () => window.api.toggle();
 $('reset').onclick = () => window.api.reset();

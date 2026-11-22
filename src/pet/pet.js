@@ -5,21 +5,27 @@
   const flip = document.getElementById('flip');
   const bubble = document.getElementById('bubble');
   const OVERLAY = location.pathname.endsWith('pet.html');
-  flip.innerHTML = window.POMO_SVG;
 
   const WALK_SPEED = 55; // px per second
   const GRAVITY = 2200;
-  const POSES = ['walking', 'dancing', 'sitting', 'slashing', 'bowing', 'jumping', 'held'];
-  const POKES = [
-    'hehe that tickles',
-    'you are doing great',
-    'I am proud of you',
-    'one round at a time',
-    'drink some water, friend',
-    'boop!',
-    'I believe in you',
-    'a calm mind cuts clean',
-  ];
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+  // Which character is on stage. Everything character-specific (drawing, extra
+  // moves, what they say) comes from src/characters/<id>.js
+  let charId = '';
+  let char = null;
+  function setCharacter(id) {
+    if (!window.CHARACTERS[id]) id = Object.keys(window.CHARACTERS)[0];
+    if (id === charId) return;
+    charId = id;
+    char = window.CHARACTERS[id];
+    flip.innerHTML = char.svg;
+    flip.classList.remove('left');
+    actUntil = 0;
+    targetX = null;
+    waitUntil = 0;
+    setPose('');
+  }
 
   let x = 40;
   let y = 0;            // height above the floor
@@ -44,8 +50,8 @@
 
   function setPose(p) {
     if (p === pose) return;
+    if (pose) flip.classList.remove(pose);
     pose = p;
-    flip.classList.remove(...POSES);
     if (p) flip.classList.add(p);
   }
 
@@ -85,7 +91,8 @@
     }
     if (mode === 'break') {
       if (pose === 'dancing') {
-        if (Math.random() < 0.3) act('slashing', 1500);
+        const extra = pick(char.breakActions);
+        if (extra && Math.random() < 0.3) act(extra.pose, extra.ms);
         else targetX = rand(0, maxX());
       } else {
         setPose('dancing');
@@ -101,8 +108,10 @@
     }
     const r = Math.random();
     if (r < 0.55) targetX = rand(0, maxX());
-    else if (r < 0.75) act('slashing', 1500);
-    else if (r < 0.9) act('bowing', 1700);
+    else if (r < 0.9 && char.idleActions.length) {
+      const extra = pick(char.idleActions);
+      act(extra.pose, extra.ms);
+    }
     else waitUntil = now + rand(1500, 3500);
   }
 
@@ -152,6 +161,7 @@
   }
 
   function applyState(s) {
+    setCharacter(s.settings.character);
     const next = !s.running ? 'idle' : s.phase === 'focus' ? 'focus' : 'break';
     if (next === mode) return;
     mode = next;
@@ -159,8 +169,8 @@
     waitUntil = 0;
     if (performance.now() < actUntil) return; // mid celebration, let that finish
     setPose('');
-    if (mode === 'focus') say('Focus time. I shall meditate');
-    if (mode === 'break') say('Break time! Dance with me');
+    if (mode === 'focus') say(char.lines.focus);
+    if (mode === 'break') say(char.lines.break);
   }
 
   // In the overlay, clicks only land on Pomo and pass through everywhere else.
@@ -193,21 +203,21 @@
     pet.classList.remove('grabbed');
     if (!hovering) setHover(false);
     if (wasDragged) {
-      if (y > 40) say('wheee!', 1500);
+      if (y > 40) say(char.lines.dropped, 1500);
     } else {
       act('jumping', 1100);
-      say(POKES[Math.floor(Math.random() * POKES.length)]);
+      say(pick(char.lines.pokes));
     }
   });
 
   window.api.onPetEvent((e) => {
     if (e.type === 'task-done') {
       act('jumping', 1000);
-      say(e.allDone ? 'All done!! Amazing' : ['One down!', 'Nice one!', 'Clean cut!', 'Checked off!'][Math.floor(Math.random() * 4)], 2200);
+      say(e.allDone ? char.lines.allDone : pick(char.lines.taskDone), 2200);
     }
     if (e.type === 'phase-end') {
       act('jumping', 3300);
-      say(e.from === 'focus' ? 'You did it!! Break time' : 'Okay! Let\'s go again', 4000);
+      say(e.from === 'focus' ? char.lines.focusDone : char.lines.breakDone, 4000);
     }
   });
   window.api.onState(applyState);

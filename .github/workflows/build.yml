@@ -25,6 +25,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # every build gets its own version number, e.g. 0.1.12
+      - run: npm version "0.1.${{ github.run_number }}" --no-git-tag-version --allow-same-version
+      - name: Check the Windows launcher scripts
+        if: runner.os == 'Windows'
+        shell: cmd
+        env:
+          POMO_NO_START: "1"
+        run: |
+          call start-windows.bat < nul
+          if errorlevel 1 exit /b 1
+          call make-desktop-shortcut.bat < nul
+          if errorlevel 1 exit /b 1
       - run: npx electron-builder --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
@@ -35,3 +47,25 @@ jobs:
             dist/*.dmg
             dist/*.exe
           if-no-files-found: error
+
+  # Puts the installers on the repo's Releases page so they are easy to find.
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: 0.1.${{ github.run_number }}
+        run: |
+          ls -la dist
+          gh release create "v$VERSION" dist/*.exe dist/*.dmg \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Pomo $VERSION" \
+            --notes "Windows: download Pomo-Setup-$VERSION.exe and run it. Mac: download the .dmg (arm64 for Apple Silicon, x64 for Intel). Installing over an older version keeps your settings and to-do list."

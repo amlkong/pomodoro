@@ -1,86 +1,180 @@
-# Pomo 🦦
+# Pomo 🦦🐱
 
-A cute pomodoro timer for Mac and Windows. Pomo, a tiny samurai otter, keeps you company: wandering around, practicing sword moves and bowing when you're idle, meditating quietly while you focus, and dancing when it's break time.
+A cute pomodoro timer for Windows and Mac. A little animated buddy keeps you company while you work: wandering around when you're idle, settling down quietly while you focus, and dancing when it's break time. It also has a to-do list and can play and pause your Spotify for you.
 
-<p><img src="docs/timer.png" width="230" alt="The timer window with Pomo dancing inside it"> <img src="docs/pomo-moves.png" width="520" alt="Pomo's moves"></p>
+<p><img src="docs/timer.png" width="220" alt="The timer window with the tabby living inside it"></p>
+<p><img src="docs/pomo-moves.png" width="640" alt="Pomo the otter's moves"></p>
+<p><img src="docs/tabby-moves.png" width="640" alt="The tabby's moves"></p>
 
-## Install it
+## Contents
 
-### The easy way: download the installer
+- [Install on Windows](#install-on-windows)
+- [Install on Mac](#install-on-mac)
+- [Getting a newer version](#getting-a-newer-version)
+- [Using Pomo](#using-pomo)
+- [Set up Spotify](#set-up-spotify-optional)
+- [Always-latest mode](#always-latest-mode-optional)
+- [If something isn't working](#if-something-isnt-working)
+- [For tinkering](#for-tinkering)
 
-Every change to this repo automatically builds fresh installers.
+## Install on Windows
 
-1. Open the [Actions tab](https://github.com/amlkong/pomodoro/actions) (you need to be signed in to GitHub).
-2. Click the newest run with a green check.
-3. Under **Artifacts**, download **Pomo-mac** or **Pomo-windows** and unzip it.
+1. Sign in to GitHub (this repo is private, so the download page only shows for you).
+2. Open the **[latest release](https://github.com/amlkong/pomodoro/releases/latest)**.
+3. Under **Assets**, click `Pomo-Setup-x.x.x.exe` to download it.
+4. Double-click the downloaded file.
+5. If a blue "Windows protected your PC" box appears, click **More info**, then **Run anyway**. It shows up because the app isn't signed with a paid Microsoft certificate, which is normal for personal apps.
 
-**Mac:** open the `.dmg` (`arm64` for Apple Silicon M1/M2/M3/M4, `x64` for older Intel Macs) and drag Pomo into Applications. The first time, right-click Pomo and choose **Open**. If macOS still says no, go to System Settings → Privacy & Security and click **Open Anyway**. You only do this once.
+That's it. Pomo opens by itself, and from now on you start it from the **Pomo icon on your desktop** or from the Start menu.
 
-**Windows:** run the `.exe`. If a blue "Windows protected your PC" box appears, click **More info** → **Run anyway**.
+## Install on Mac
 
-Those one-time prompts show up because the app isn't signed with a paid Apple or Microsoft developer certificate. That's normal for personal apps.
+1. Sign in to GitHub and open the **[latest release](https://github.com/amlkong/pomodoro/releases/latest)**.
+2. Under **Assets**, download the `.dmg`: `arm64` for Apple Silicon (M1/M2/M3/M4), `x64` for older Intel Macs. Apple menu → About This Mac tells you which you have.
+3. Open the `.dmg` and drag Pomo into Applications.
+4. In Applications, right-click Pomo and choose **Open**, then **Open** again.
+5. If it still won't open: System Settings → Privacy & Security → scroll down → **Open Anyway**.
 
-### Or: always-up-to-date mode (no reinstalling)
+## Getting a newer version
 
-If you're still changing things often, skip the installer. Keep a copy of the code and open Pomo with a launcher that pulls the newest version every time.
+Every change to this repo automatically publishes a new release with fresh installers.
 
-One-time setup:
+1. Open the **[latest release](https://github.com/amlkong/pomodoro/releases/latest)**.
+2. Download and run the new installer, same as the first time.
 
-1. Install [Node.js](https://nodejs.org) (the LTS version) and [Git](https://git-scm.com/downloads). On a Mac, Git is usually there already.
-2. Open Terminal (Mac) or Command Prompt (Windows) and run:
-   ```bash
+It installs over the old one. Your settings, to-do list and Spotify connection are kept, and your desktop icon keeps working.
+
+If you'd rather not download anything for each update, see [Always-latest mode](#always-latest-mode-optional).
+
+## Using Pomo
+
+### The timer
+
+- **Start / Pause / Resume**: the big button, or press the space bar.
+- **↺** resets the current round. **⏭** skips to the next one.
+- **Focus / Short break / Long break** tabs jump straight to that kind of round.
+- The dots show how many focus rounds you've done toward the next long break.
+- A desktop notification pops up when a round ends.
+- **⚙** opens settings: how long each round is, how many rounds before a long break, whether the next round starts by itself, and Spotify.
+
+### The to-do list
+
+- Type a task under the timer and press **Enter**.
+- Tick the box when it's done. Your buddy celebrates.
+- Hover a task and click **×** to remove it, or **clear done** to sweep away the finished ones.
+- The list is saved, so it's still there next time you open the app.
+
+### Your buddy
+
+Two buttons at the top of the window control the character:
+
+- **⇄ switches character.** Right now there are two:
+  - 🦦 **Pomo**, a samurai otter. Practices sword moves, bows, and meditates while you focus.
+  - 🐱 **Tabby**, a happy tabby cat. Bats at things, washes a paw, stretches, and naps in a loaf while you focus.
+- **The pill next to it chooses where they live.** Click to cycle:
+  - **whole screen**: walks along the bottom of your screen, on top of your other windows. Your clicks pass straight through to whatever is underneath.
+  - **in window**: stays inside the timer window on a little floor.
+  - **hidden**: goes away until you click again.
+
+Click your buddy for a little hello. You can also pick them up with the mouse, carry them anywhere, and drop them.
+
+## Set up Spotify (optional)
+
+Pomo works like a remote control for the Spotify app you already have open: it presses play when you start focusing and pause on breaks. You need **Spotify Premium** (Spotify only allows remote control on Premium) and this one-time setup, about five minutes:
+
+1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and log in with your normal Spotify account.
+2. Click **Create app**. Any name and description are fine, for example "Pomo".
+3. In **Redirect URIs**, paste this exactly and click **Add**:
+   ```
+   http://127.0.0.1:8888/callback
+   ```
+4. If it asks which API you're planning to use, tick **Web API**. Save.
+5. Open your new app's **Settings** and copy the **Client ID**.
+6. In Pomo, click **⚙** and paste the Client ID into the Spotify box.
+7. Optional: paste a link to a focus playlist in the box below it (in Spotify: Share → Copy link to playlist). Pomo starts that playlist on your first focus round. Searching Spotify for "deep focus" or "binaural beats focus" turns up good ones.
+8. Click **Connect Spotify**, then log in and click **Agree** on the page that opens in your browser.
+
+Day to day: keep the Spotify app open on your computer or phone. Start a focus round and the music plays; breaks pause it. If you'd like music during breaks too, turn on **Keep music on during breaks** in ⚙.
+
+## Always-latest mode (optional)
+
+This is for when you're changing the app often and don't want to download an installer each time. You keep a copy of the code on your computer and open Pomo with a launcher that fetches the newest version every time it starts.
+
+### One-time setup (Windows)
+
+1. Install [Node.js](https://nodejs.org) (the **LTS** version). Click through the installer with the default options.
+2. Install [Git for Windows](https://git-scm.com/downloads/win), also with the default options.
+3. Open **Command Prompt** (press the Windows key, type `cmd`, press Enter) and run:
+   ```
    git clone https://github.com/amlkong/pomodoro.git
    ```
-   That creates a `pomodoro` folder wherever your terminal was, usually your home folder.
+   A GitHub sign-in window pops up the first time because the repo is private. Sign in and it continues. This creates a `pomodoro` folder inside your user folder (`C:\Users\<you>\pomodoro`).
+4. Open that folder and double-click **`make-desktop-shortcut.bat`**. It puts a **Pomo (latest)** icon on your desktop.
 
-From then on, to open Pomo with the latest changes, double-click:
+From then on, double-click **Pomo (latest)** on your desktop. A small helper window opens minimized in the taskbar, checks for updates, and starts Pomo. The very first start takes a minute or two.
 
-- **Mac:** `start-mac.command` inside the `pomodoro` folder
-- **Windows:** `start-windows.bat` inside the `pomodoro` folder
+### One-time setup (Mac)
 
-A small terminal window opens alongside the app. Leave it open while you use Pomo; closing it closes Pomo.
+1. Install [Node.js](https://nodejs.org) (the **LTS** version).
+2. Open **Terminal** and run `git clone https://github.com/amlkong/pomodoro.git`, signing in to GitHub when asked.
+3. From then on, double-click **`start-mac.command`** in the `pomodoro` folder. The first time, right-click it and choose **Open**.
 
-`npm run dist` builds an installer for the computer you're on, into `dist/`.
+Good to know: in this mode, a helper window stays open while Pomo runs. Closing it closes Pomo. The installed version doesn't have that, so it's the nicer one for everyday use.
 
-## What it does
+## If something isn't working
 
-- Focus / short break / long break timer, with a long break every 4 rounds (all adjustable in ⚙)
-- A to-do list right in the timer window: add what you want to get through, check things off as you go (Pomo cheers), and it's still there next time you open the app
-- Desktop notification when a round ends
-- Space bar starts and pauses
-- Music that follows the timer: on while you focus, off on breaks (or keep it on, your call)
+**`start-windows.bat` opens and closes, or does nothing.** It now stays open and tells you what's wrong. The usual causes:
+- *"Pomo needs Node.js"*: install Node.js from [nodejs.org](https://nodejs.org), then try again.
+- *"This file only works from inside the whole pomodoro folder"*: the file was downloaded by itself. You need the whole project (step 3 of always-latest mode).
+- *"Could not check for updates"*: Git isn't signed in to GitHub, or you're offline. Pomo still opens with the version you have.
 
-### Pomo
+**Windows says "Windows protected your PC".** Click **More info** → **Run anyway**.
 
-The 🦦 button at the top of the timer chooses where he lives. Click it to cycle:
+**Mac says the app can't be opened.** Right-click → **Open**, or System Settings → Privacy & Security → **Open Anyway**.
 
-- **whole screen**: he walks along the bottom of your screen, on top of your other windows. Your clicks pass straight through to whatever is underneath.
-- **in window**: he stays inside the timer window on his own little floor.
-- **hidden**: he takes a nap offscreen.
+**Spotify says "Open Spotify and play something once".** Spotify needs an active device. Play any song for a second in the Spotify app, then start your focus round again.
 
-Click him for a little hello. You can also pick him up with the mouse, carry him anywhere, and drop him.
+**Spotify connect fails with a redirect error.** The Redirect URI in the Spotify dashboard has to match exactly: `http://127.0.0.1:8888/callback`
 
-## Music (Spotify)
+**The character isn't showing.** Click the pill at the top of the window until it says **whole screen** or **in window**.
 
-Pomo works like a remote control for the Spotify app you already have open: play when you focus, pause on breaks. This needs Spotify Premium (Spotify's rule for remote control) and a one time setup:
+**I can't see the releases page.** Make sure you're signed in to the GitHub account that owns this repo.
 
-1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and create an app. Any name is fine.
-2. Add this Redirect URI exactly: `http://127.0.0.1:8888/callback`
-3. Copy the **Client ID**.
-4. In Pomo: ⚙ → paste the Client ID → optionally paste a playlist link → **Connect Spotify**.
-5. Log in on the page that opens.
+## For tinkering
 
-After that, starting a focus round presses play and breaks press pause. Have Spotify open on your computer or phone so there's something to control.
+Run it from the code:
 
-Tip: paste a focus playlist link (binaural beats, lo-fi, deep focus, whatever works for you) and Pomo starts that playlist on your first focus round.
+```bash
+npm install
+npm start
+```
 
-## Project layout
+Build an installer for the computer you're on (lands in `dist/`):
+
+```bash
+npm run dist
+```
+
+### Adding a character
+
+Each character is two files in `src/characters/`:
+
+- `name.js`: the drawing (an SVG), its name and emoji, what it says, and its extra moves
+- `name.css`: the animations for each pose
+
+Every character needs these poses: `walking`, `dancing`, `sitting` (focus time), `jumping` (celebrating) and `held` (picked up). On top of that it can have its own extras, listed in `idleActions` and `breakActions`, like the otter's `slashing` or the cat's `licking`.
+
+To add one, copy `cat.js` and `cat.css`, change the drawing and animations, then add the two files to both `src/timer/index.html` and `src/pet/pet.html` next to the existing ones. The ⇄ button picks it up automatically.
+
+### Project layout
 
 ```
-src/main.js        timer logic, windows, music control
-src/spotify.js     Spotify login and play/pause
-src/pomo.js/.css   Pomo's drawing and animations
-src/timer/         the timer window
-src/pet/           Pomo's behaviour (shared by the screen overlay and the timer window)
-build/             app icon and installer helpers
+src/main.js          timer logic, windows, to-do storage, music control
+src/spotify.js       Spotify login and play/pause
+src/characters/      one .js and one .css per character
+src/pet/             how a character behaves (shared by the screen overlay and the timer window)
+src/timer/           the timer window
+build/               app icon and installer helpers
+start-windows.bat    always-latest launcher for Windows
+start-mac.command    always-latest launcher for Mac
 ```

@@ -18,8 +18,13 @@ header {
   padding: 14px 14px 4px 22px; -webkit-app-region: drag;
 }
 .brand { font-weight: 800; font-size: 18px; letter-spacing: .5px; color: var(--accent); transition: color .5s; }
+#swap {
+  -webkit-app-region: no-drag; margin-left: auto; margin-right: 5px; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--soft); font-size: 14px; font-weight: 800; line-height: 1; transition: background .5s, transform .3s;
+}
+#swap:hover { transform: rotate(180deg); }
 #roam {
-  -webkit-app-region: no-drag; margin-left: auto; margin-right: 4px; padding: 4px 10px; border-radius: 999px;
+  -webkit-app-region: no-drag; margin-right: 4px; padding: 4px 10px; border-radius: 999px;
   background: var(--soft); font-size: 11.5px; font-weight: 700; transition: background .5s;
 }
 #roam:hover { filter: brightness(.96); }

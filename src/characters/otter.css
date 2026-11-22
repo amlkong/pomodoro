@@ -1,8 +1,5 @@
-/* Pomo's moves. Put one of these classes on a wrapper around the SVG:
-   .walking .dancing .sitting .slashing .bowing .jumping .held   (no class = standing) */
-.pomo-svg { width: 100%; height: 100%; overflow: visible; display: block; }
-.pomo-svg * { transform-box: fill-box; }
-
+/* Pomo the otter's moves. A pose class sits on the wrapper around the SVG:
+   .walking .dancing .sitting .jumping .held, plus his own .slashing and .bowing */
 .o-all { transform-origin: 50% 100%; }
 .o-body { transform-origin: 50% 100%; animation: o-breathe 3s ease-in-out infinite; }
 .o-head { transform-origin: 50% 100%; }

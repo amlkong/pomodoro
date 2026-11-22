@@ -10,6 +10,7 @@ const DEFAULTS = {
   longEvery: 4,
   autoStart: true,
   showPet: true,
+  character: 'otter', // a file name from src/characters
   petRoam: 'screen', // 'screen' = whole desktop, 'window' = inside the timer window
   musicOnBreaks: false,
   spotifyClientId: '',
@@ -249,6 +250,7 @@ function registerIpc() {
       if (k in patch) settings[k] = Boolean(patch[k]);
     }
     if (patch.petRoam === 'screen' || patch.petRoam === 'window') settings.petRoam = patch.petRoam;
+    if (typeof patch.character === 'string' && /^[a-z0-9-]{1,30}$/.test(patch.character)) settings.character = patch.character;
     if ('spotifyPlaylist' in patch) {
       settings.spotifyPlaylist = String(patch.spotifyPlaylist || '').trim();
       spotify.resetContext();

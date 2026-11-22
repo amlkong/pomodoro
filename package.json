@@ -1,7 +1,7 @@
 {
   "name": "pomo",
   "version": "0.1.0",
-  "description": "A cute pomodoro timer with a little samurai otter who lives on your screen",
+  "description": "A cute pomodoro timer with little animated friends who live on your screen",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -47,11 +47,15 @@
           ]
         }
       ],
-      "artifactName": "Pomo-${version}-windows-setup.${ext}"
+      "artifactName": "Pomo-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": true,
-      "perMachine": false
+      "perMachine": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Pomo",
+      "runAfterFinish": true
     }
   },
   "author": "amlkong"

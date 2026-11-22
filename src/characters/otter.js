@@ -1,6 +1,32 @@
-// Pomo the samurai otter. One SVG shared by the timer window and the on-screen pet.
-window.POMO_SVG = `
-<svg class="pomo-svg" viewBox="0 0 140 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+// Pomo the samurai otter.
+window.CHARACTERS = window.CHARACTERS || {};
+window.CHARACTERS.otter = {
+  name: 'Pomo',
+  emoji: '🦦',
+  // little things he does on his own: a pose (see otter.css) and how long it lasts
+  idleActions: [{ pose: 'slashing', ms: 1500 }, { pose: 'bowing', ms: 1700 }],
+  breakActions: [{ pose: 'slashing', ms: 1500 }],
+  lines: {
+    focus: 'Focus time. I shall meditate',
+    break: 'Break time! Dance with me',
+    focusDone: 'You did it!! Break time',
+    breakDone: 'Okay! Let\'s go again',
+    taskDone: ['One down!', 'Nice one!', 'Clean cut!', 'Checked off!'],
+    allDone: 'All done!! Amazing',
+    dropped: 'wheee!',
+    pokes: [
+      'hehe that tickles',
+      'you are doing great',
+      'I am proud of you',
+      'one round at a time',
+      'drink some water, friend',
+      'boop!',
+      'I believe in you',
+      'a calm mind cuts clean',
+    ],
+  },
+  svg: `
+<svg class="char-svg" viewBox="0 0 140 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <ellipse class="o-shadow" cx="70" cy="144" rx="34" ry="5" fill="rgba(50,35,35,.18)"/>
   <g class="o-all">
     <path class="o-tail" d="M84 121 C104 116 124 126 136 139 C120 142 100 141 84 136 Z" fill="#8d7d75"/>
@@ -52,4 +78,5 @@ window.POMO_SVG = `
       </g>
     </g>
   </g>
-</svg>`;
+</svg>`,
+};
