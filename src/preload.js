@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('api', {
   minimize: send('win:minimize'),
   maximize: send('win:maximize'),
   applyUpdate: send('update:apply'),
+  checkUpdates: send('update:check'),
   close: send('win:close'),
 });

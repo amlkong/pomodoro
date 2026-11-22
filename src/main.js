@@ -30,6 +30,7 @@ const state = { phase: 'focus', running: false, remainingMs: 0, totalMs: 0, comp
 let restoreBounds = null; // set while the timer window is maximized
 let update = null;        // { status: 'downloading' | 'ready' | 'available', version, url? }
 let autoUpdater = null;
+let updateStatus = '';
 const startedAt = Date.now();
 let endAt = 0;
 let spotifyMsg = '';
@@ -92,6 +93,8 @@ function publicState() {
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
     maximized: Boolean(restoreBounds),
     update,
+    updateStatus,
+    appVersion: app.getVersion(),
   };
 }
 
@@ -348,6 +351,7 @@ function registerIpc() {
     timerWin.setResizable(false);
     broadcast();
   });
+  ipcMain.on('update:check', () => checkForUpdates());
   ipcMain.on('update:apply', () => {
     if (!update) return;
     if (update.status === 'ready' && autoUpdater) autoUpdater.quitAndInstall(true, true);
@@ -363,19 +367,32 @@ function registerIpc() {
 const RELEASES_API = 'https://api.github.com/repos/amlkong/pomodoro/releases/latest';
 const newer = (a, b) => a.localeCompare(b, undefined, { numeric: true }) > 0;
 
+// One line the settings screen shows, so update problems are never silent.
+function setUpdateStatus(text) {
+  updateStatus = text;
+  broadcast();
+}
+
+let checkForUpdates = () => setUpdateStatus('Updates only work in the installed app.');
+
 function setupUpdates() {
   if (!app.isPackaged) return;
   if (process.platform === 'win32') {
     autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on('checking-for-update', () => setUpdateStatus('Checking for a newer version…'));
+    autoUpdater.on('update-not-available', () => setUpdateStatus('You have the latest version.'));
     autoUpdater.on('update-available', (info) => {
       update = { status: 'downloading', version: info.version };
-      broadcast();
+      setUpdateStatus(`Downloading version ${info.version}…`);
+    });
+    autoUpdater.on('download-progress', (p) => {
+      if (update) setUpdateStatus(`Downloading version ${update.version}… ${Math.round(p.percent)}%`);
     });
     autoUpdater.on('update-downloaded', (info) => {
       update = { status: 'ready', version: info.version };
-      broadcast();
+      setUpdateStatus(`Version ${info.version} is ready. It installs when Pomo restarts.`);
       // Just opened and nothing in progress? Switch to the new version right
       // away, so opening Pomo always lands on the latest one.
       const justOpened = Date.now() - startedAt < 3 * 60 * 1000;
@@ -384,27 +401,32 @@ function setupUpdates() {
     });
     autoUpdater.on('error', (e) => {
       console.error('Update check failed:', e.message);
-      if (update && update.status === 'downloading') { update = null; broadcast(); }
+      if (update && update.status === 'downloading') update = null;
+      setUpdateStatus(`Couldn't update: ${String(e.message || e).split('\n')[0].slice(0, 140)}`);
     });
-    const check = () => autoUpdater.checkForUpdates().catch(() => {});
-    check();
-    setInterval(check, 60 * 60 * 1000);
-    return;
-  }
-  const check = async () => {
-    try {
-      const res = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } });
-      if (!res.ok) return;
-      const rel = await res.json();
-      const version = String(rel.tag_name || '').replace(/^v/, '');
-      if (version && newer(version, app.getVersion())) {
-        update = { status: 'available', version, url: rel.html_url };
-        broadcast();
+    checkForUpdates = () => autoUpdater.checkForUpdates().catch(() => {});
+  } else {
+    // Mac: the app isn't signed, so it can only point at the download page.
+    checkForUpdates = async () => {
+      setUpdateStatus('Checking for a newer version…');
+      try {
+        const res = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } });
+        if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
+        const rel = await res.json();
+        const version = String(rel.tag_name || '').replace(/^v/, '');
+        if (version && newer(version, app.getVersion())) {
+          update = { status: 'available', version, url: rel.html_url };
+          setUpdateStatus(`Version ${version} is out. Click the pill on the main screen to download it.`);
+        } else {
+          setUpdateStatus('You have the latest version.');
+        }
+      } catch (e) {
+        setUpdateStatus(`Couldn't check: ${e.message}`);
       }
-    } catch { /* offline, try again later */ }
-  };
-  check();
-  setInterval(check, 60 * 60 * 1000);
+    };
+  }
+  checkForUpdates();
+  setInterval(() => checkForUpdates(), 60 * 60 * 1000);
 }
 
 // ---------- boot ----------

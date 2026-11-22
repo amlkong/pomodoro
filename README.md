@@ -143,7 +143,7 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 
 **The character isn't showing.** Click the pill at the top of the window until it says **on screen** or **in window**.
 
-**The update pill never shows up on Windows.** Updates only work in the installed app (the one from `Pomo-Setup`), not when running from the code. Give it a minute after opening, and make sure you're online.
+**Pomo isn't updating itself on Windows.** Look at the small version number next to "pomo" at the top left. Versions before 0.1.8 don't have the updater, so install the newest `Pomo-Setup` once by hand and it takes care of itself from then on. On newer versions, open ⚙ and click **Check for updates**: the line underneath says exactly what's happening, including any error. Updates only work in the installed app, not when running from the code.
 
 ## For tinkering
 

@@ -47,6 +47,9 @@ function render(s) {
   document.body.classList.toggle('max', s.maximized);
   $('max').textContent = s.maximized ? '❐' : '□';
   $('max').title = s.maximized ? 'Restore' : 'Maximize';
+  $('ver').textContent = ` ${s.appVersion}`;
+  $('verLong').textContent = `Pomo version ${s.appVersion}`;
+  $('updateStatus').textContent = s.updateStatus || '';
   $('update').hidden = !s.update;
   if (s.update) {
     $('update').textContent = {
@@ -197,6 +200,7 @@ $('alarmSound').addEventListener('change', (e) => { if (e.target.checked) chime(
 
 $('max').onclick = () => window.api.maximize();
 $('update').onclick = () => window.api.applyUpdate();
+$('checkUpdates').onclick = () => window.api.checkUpdates();
 $('toggle').onclick = () => window.api.toggle();
 $('reset').onclick = () => window.api.reset();
 $('skip').onclick = () => window.api.skip();
