@@ -128,6 +128,7 @@ body.pet-in .time { font-size: 46px; }
 #charMenu .pic { width: 34px; height: 36px; flex-shrink: 0; pointer-events: none; }
 
 /* update pill */
+#update:disabled { opacity: .75; cursor: default; }
 #update { background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 800; padding: 5px 12px; border-radius: 999px; margin-bottom: 8px; }
 
 /* maximized: square corners, everything a bit bigger and centred */
@@ -135,6 +136,3 @@ body.max .card, body.max .card::after { border-radius: 0; }
 body.max main, body.max #settings { width: 100%; max-width: 400px; margin: 0 auto; zoom: 1.3; }
 body.max { --pet-w: 110px; }
 body.max #charMenu { left: auto; right: 120px; transform: none; }
-#charMenu { max-height: 70vh; overflow-y: auto; }
-#charMenu button.add { justify-content: center; font-size: 12.5px; color: var(--muted); padding: 6px 10px; }
-#charMenu button.add.first { border-top: 2px solid var(--soft); border-radius: 0; margin-top: 4px; padding-top: 9px; }

@@ -37,7 +37,7 @@ window.CHARACTERS.panda = {
     <ellipse class="r-foot r-foot-r" cx="84" cy="139" rx="10" ry="5.5" fill="#4a2e25"/>
     <g class="r-body">
       <ellipse cx="70" cy="110" rx="30" ry="30" fill="#e8873a"/>
-      <ellipse cx="70" cy="118" rx="19" ry="20" fill="#4a2e25"/>
+      <ellipse cx="70" cy="120" rx="14.5" ry="15.5" fill="#4a2e25"/>
     </g>
     <g class="r-head">
       <path class="r-ear" d="M37 52 L33 25 L60 37 Z" fill="#f6e6cf" stroke="#4a2e25" stroke-width="4" stroke-linejoin="round"/>

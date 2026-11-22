@@ -32,21 +32,3 @@
   from { transform: translate(0, 0) rotate(0); opacity: 1; }
   to { transform: translate(var(--dx), -80px) rotate(var(--rot)); opacity: 0; }
 }
-
-/* Picture-based (custom) characters. With only a single image per pose, these
-   little motions keep them feeling alive. */
-.char-img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; display: block; pointer-events: none; -webkit-user-drag: none; transform-origin: 50% 100%; }
-/* known size: shown at its real relative scale, standing on the floor, centred, never stretched */
-.char-img.sized { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; height: auto; max-height: 100%; object-fit: contain; }
-#flip, .mini, #charMenu .pic { position: relative; }
-.img-char .char-img { animation: i-breathe 3s ease-in-out infinite; }
-.img-char.walking .char-img { animation: i-waddle .4s ease-in-out infinite; }
-.img-char.dancing .char-img { animation: i-groove .9s ease-in-out infinite; }
-.img-char.sitting .char-img { animation: i-breathe 4.5s ease-in-out infinite; }
-.img-char.jumping .char-img { animation: i-jump .5s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
-.img-char.held .char-img { transform-origin: 50% 0%; animation: i-swing .5s ease-in-out infinite alternate; }
-@keyframes i-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
-@keyframes i-waddle { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-3px); } }
-@keyframes i-groove { 0%, 100% { transform: rotate(-8deg); } 25%, 75% { transform: rotate(0) translateY(-7px); } 50% { transform: rotate(8deg); } }
-@keyframes i-jump { from { transform: translateY(0) scale(1.04, .95); } to { transform: translateY(-26%) scale(.97, 1.04); } }
-@keyframes i-swing { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }

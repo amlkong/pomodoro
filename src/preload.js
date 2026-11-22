@@ -4,9 +4,6 @@ const send = (channel) => (arg) => ipcRenderer.send(channel, arg);
 
 contextBridge.exposeInMainWorld('api', {
   getState: () => ipcRenderer.invoke('state:get'),
-  getCustomCharacters: () => ipcRenderer.invoke('characters:custom'),
-  openCharactersFolder: send('characters:openFolder'),
-  reloadCharacters: send('characters:reload'),
   onState: (fn) => ipcRenderer.on('state', (_e, s) => fn(s)),
   onPetEvent: (fn) => ipcRenderer.on('pet:event', (_e, p) => fn(p)),
   toggle: send('timer:toggle'),

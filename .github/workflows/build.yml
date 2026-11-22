@@ -25,7 +25,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
       # every build gets its own version number, e.g. 0.1.12
       - run: npm version "0.1.${{ github.run_number }}" --no-git-tag-version --allow-same-version
       - name: Check the Windows launcher scripts

@@ -40,8 +40,7 @@ function render(s) {
   const char = window.CHARACTERS[charId];
   if (charId !== miniChar) {
     miniChar = charId;
-    window.mountCharacter(mini, char);
-    mini.classList.toggle('img-char', Boolean(char.frames));
+    mini.innerHTML = char.svg;
   }
   $('roam').textContent = `${char.emoji} ${{ screen: 'on screen', window: 'in window', hidden: 'hidden' }[where]}`;
   $('swap').title = `Choose character (now: ${char.name})`;
@@ -50,18 +49,15 @@ function render(s) {
   $('max').title = s.maximized ? 'Restore' : 'Maximize';
   $('update').hidden = !s.update;
   if (s.update) {
-    $('update').textContent = s.update.status === 'ready'
-      ? `✨ Version ${s.update.version} is ready · restart`
-      : `✨ Version ${s.update.version} is out · download`;
+    $('update').textContent = {
+      downloading: `✨ Getting version ${s.update.version}…`,
+      ready: `✨ Version ${s.update.version} is ready · restart`,
+      available: `✨ Version ${s.update.version} is out · download`,
+    }[s.update.status];
+    $('update').disabled = s.update.status === 'downloading';
   }
 
-  const miniPose = !s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing';
-  mini.className = 'mini ' + (char.frames ? 'img-char ' : '') + miniPose;
-  if (char.frames && mini.dataset.pose !== `${charId}:${miniPose}`) {
-    mini.dataset.pose = `${charId}:${miniPose}`;
-    const img = mini.querySelector('.char-img');
-    if (img) window.showCharacterFrame(img, char, (char.frames[miniPose] || char.frames.idle)[0]);
-  }
+  mini.className = 'mini ' + (!s.running ? '' : s.phase === 'focus' ? 'sitting' : 'dancing');
 
   // one dot per focus round until the next long break
   const every = s.settings.longEvery;
@@ -144,7 +140,7 @@ function buildCharMenu() {
     item.className = id === miniChar ? 'on' : '';
     const pic = document.createElement('span');
     pic.className = 'pic';
-    window.mountCharacter(pic, c);
+    pic.innerHTML = c.svg;
     const name = document.createElement('span');
     name.textContent = c.name;
     item.append(pic, name);
@@ -154,21 +150,6 @@ function buildCharMenu() {
     };
     charMenu.append(item);
   }
-  const add = document.createElement('button');
-  add.className = 'add first';
-  add.textContent = '＋ Add your own…';
-  add.title = 'Opens the folder where you can drop in your own character pictures';
-  add.onclick = () => {
-    charMenu.hidden = true;
-    window.api.openCharactersFolder();
-  };
-  charMenu.append(add);
-  const refresh = document.createElement('button');
-  refresh.className = 'add';
-  refresh.textContent = '↻ Refresh list';
-  refresh.title = 'Re-read your own characters after adding or changing pictures';
-  refresh.onclick = () => window.api.reloadCharacters();
-  charMenu.append(refresh);
 }
 $('swap').onclick = (e) => {
   e.stopPropagation();
@@ -257,4 +238,4 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.api.onState(render);
-window.customCharactersReady.then(() => window.api.getState()).then(render);
+window.api.getState().then(render);

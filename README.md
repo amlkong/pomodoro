@@ -5,7 +5,7 @@ A cute pomodoro timer for Windows and Mac. A little animated buddy keeps you com
 <p><img src="docs/timer.png" width="220" alt="The timer window with Daphne the cat living inside it"> <img src="docs/character-menu.png" width="220" alt="The character menu"></p>
 <p><img src="docs/pomo-moves.png" width="640" alt="Pomo the otter's moves"></p>
 <p><img src="docs/daphne-moves.png" width="640" alt="Daphne the cat's moves"></p>
-<p><img src="docs/new-friends-moves.png" width="640" alt="Maple, Kai and Mochi's moves"></p>
+<p><img src="docs/maple-moves.png" width="640" alt="Maple the red panda's moves"></p>
 
 ## Contents
 
@@ -39,7 +39,9 @@ That's it. Pomo opens by itself, and from now on you start it from the **Pomo ic
 
 Every change to this repo automatically publishes a new release.
 
-**Windows: nothing to do.** Pomo checks for a new version when it opens and about once an hour. When there is one, it downloads quietly in the background, and a pill appears at the top of the window: **✨ Version x.x.x is ready · restart**. Click it to switch right away, or ignore it and the new version is simply there the next time you open Pomo.
+**Windows: nothing to do.** Just open Pomo from its desktop icon. Each time it opens, it checks for a newer version. If there is one, a pill at the top says **✨ Getting version x.x.x…**, and a few seconds later Pomo restarts itself into the new version. So double-clicking the icon always lands you on the latest one.
+
+If an update arrives while you're in the middle of a round, Pomo doesn't interrupt you. The pill changes to **✨ Version x.x.x is ready · restart**. Click it when you like, or ignore it and the new version is there next time you open Pomo.
 
 **Mac:** the pill says **✨ Version x.x.x is out · download** and takes you to the download page. Install the new `.dmg` the same way as the first time. (Apple only allows silent updates for apps signed with a paid developer certificate.)
 
@@ -72,8 +74,6 @@ Two buttons at the top of the window control the character:
   - 🦦 **Pomo**, a samurai otter. Practices sword moves, bows, and meditates while you focus.
   - 🐱 **Daphne**, a happy tabby cat. Bats at things, washes a paw, stretches, and naps in a loaf while you focus.
   - 🍁 **Maple**, a red panda. Does the famous arms-up "I'm very scary" pose, wiggles, and curls up asleep while you focus.
-  - 🥋 **Kai**, a little blue martial-arts pup. Throws punches and high kicks, and sits cross-legged to meditate while you focus.
-  - 🍡 **Mochi**, a round squishy kitty. Rolls, bounces, and melts into a sleepy puddle while you focus.
 - **The pill next to it chooses where they live.** Click to cycle:
   - **on screen**: walks along the bottom of your screen, on top of your other windows. Your clicks pass straight through to whatever is underneath.
   - **in window**: stays inside the timer window on a little floor.
@@ -82,40 +82,6 @@ Two buttons at the top of the window control the character:
 Click your buddy for a little hello. You can also pick them up with the mouse, carry them anywhere, and drop them.
 
 **Changing their size:** hover over your buddy and a small round handle appears at the top corner. Drag it up to make them bigger, down to make them smaller. There's also a **Character size** slider in ⚙. The size is remembered.
-
-### Adding your own picture characters
-
-Besides the built-in characters, Pomo can use your own pictures. They stay in a folder on your computer. They are never uploaded anywhere, never part of this repo, and never included in the installers.
-
-1. Click the round arrows button, then **＋ Add your own…** at the bottom of the menu. A folder opens (on Windows it is `%APPDATA%\Pomo\characters`).
-2. Make a new folder inside it. Its name becomes the character's name (`red_panda` shows as "Red Panda").
-3. Put pictures in it, named after poses. PNG with a see-through background looks best, and the character should face right:
-
-   | File | Used for | Also accepted |
-   | --- | --- | --- |
-   | `idle.png` | standing around (the only one you must have) | |
-   | `walk.png` | moving | `run.png` |
-   | `dance.png` | break time | `cheer.png` |
-   | `sleep.png` | focus time | `sit.png` |
-   | `happy.png` | celebrating | `excited.png` |
-   | `held.png` | being picked up | |
-
-   Any pose you leave out uses `idle.png`.
-4. Any other picture, like `sad.png` or `confused.png`, becomes a little moment your character does now and then. Nothing is ignored.
-5. Numbered pictures:
-   - the **same pixel size** means animation frames, played in order: `walk-1.png`, `walk-2.png`, `walk-3.png`
-   - **different sizes** means separate drawings, each shown as its own moment: `sad.png`, `sad-2.png`
-6. Back in Pomo, open the character menu and click **↻ Refresh list**. Your character is in the menu.
-
-Pictures are never stretched or cropped. All poses of a character are shown at the same scale, so they keep their real relative sizes. A picture that can't be read is skipped, and a folder without `idle.png` is left out, without affecting anything else.
-
-To set a display name that differs from the folder name, or what the character says, add a `character.json` next to the pictures:
-
-```json
-{ "name": "Biscuit", "emoji": "🍪", "lines": { "pokes": ["hi!", "woof"] } }
-```
-
-The folder also contains a `HOW-TO.txt` with these same steps. Please only use pictures you made or have the right to use.
 
 ## Set up Spotify (optional)
 
@@ -188,12 +154,6 @@ npm install
 npm start
 ```
 
-Run the tests:
-
-```bash
-npm test
-```
-
 Build an installer for the computer you're on (lands in `dist/`):
 
 ```bash
@@ -215,8 +175,6 @@ To add one, copy `cat.js` and `cat.css`, change the drawing and animations, then
 
 ```
 src/main.js          timer logic, windows, to-do storage, music control
-src/custom-characters.js  reads your own picture characters from disk
-test/                tests for the character loader
 src/spotify.js       Spotify login and play/pause
 src/characters/      one .js and one .css per character
 src/pet/             how a character behaves (shared by the screen overlay and the timer window)

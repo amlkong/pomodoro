@@ -2,7 +2,6 @@ const { app, BrowserWindow, ipcMain, Notification, screen, shell, safeStorage } 
 const path = require('path');
 const fs = require('fs');
 const spotify = require('./spotify');
-const { loadCustomCharacters } = require('./custom-characters');
 
 const DEFAULTS = {
   focusMin: 25,
@@ -29,8 +28,9 @@ let petWin = null;
 
 const state = { phase: 'focus', running: false, remainingMs: 0, totalMs: 0, completed: 0 };
 let restoreBounds = null; // set while the timer window is maximized
-let update = null;        // { status: 'ready' | 'available', version, url? }
+let update = null;        // { status: 'downloading' | 'ready' | 'available', version, url? }
 let autoUpdater = null;
+const startedAt = Date.now();
 let endAt = 0;
 let spotifyMsg = '';
 let lastWantMusic = null;
@@ -74,10 +74,6 @@ function writeRefreshToken(token) {
   }
   saveSettings();
 }
-
-// ---------- custom characters ----------
-// Picture-based characters the user keeps in their own app-data folder.
-const customDir = () => path.join(app.getPath('userData'), 'characters');
 
 // ---------- timer ----------
 const durationMs = (phase) => settings[DURATION_KEY[phase]] * 60 * 1000;
@@ -235,17 +231,6 @@ function clampInt(v, min, max, fallback) {
 
 function registerIpc() {
   ipcMain.handle('state:get', () => publicState());
-  ipcMain.handle('characters:custom', () => loadCustomCharacters(customDir()));
-  ipcMain.on('characters:openFolder', () => {
-    loadCustomCharacters(customDir()); // makes sure the folder and its HOW-TO exist
-    shell.openPath(customDir());
-  });
-  // re-read the folder: both windows reload and pick the characters up again
-  ipcMain.on('characters:reload', () => {
-    for (const w of [timerWin, petWin]) {
-      if (w && !w.isDestroyed()) w.webContents.reload();
-    }
-  });
 
   ipcMain.on('timer:toggle', () => setRunning(!state.running));
 
@@ -384,11 +369,23 @@ function setupUpdates() {
     autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.on('update-available', (info) => {
+      update = { status: 'downloading', version: info.version };
+      broadcast();
+    });
     autoUpdater.on('update-downloaded', (info) => {
       update = { status: 'ready', version: info.version };
       broadcast();
+      // Just opened and nothing in progress? Switch to the new version right
+      // away, so opening Pomo always lands on the latest one.
+      const justOpened = Date.now() - startedAt < 3 * 60 * 1000;
+      const untouched = !state.running && state.completed === 0 && state.remainingMs === state.totalMs;
+      if (justOpened && untouched) setTimeout(() => autoUpdater.quitAndInstall(true, true), 1500);
     });
-    autoUpdater.on('error', (e) => console.error('Update check failed:', e.message));
+    autoUpdater.on('error', (e) => {
+      console.error('Update check failed:', e.message);
+      if (update && update.status === 'downloading') { update = null; broadcast(); }
+    });
     const check = () => autoUpdater.checkForUpdates().catch(() => {});
     check();
     setInterval(check, 60 * 60 * 1000);
