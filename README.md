@@ -83,6 +83,30 @@ Click your buddy for a little hello. You can also pick them up with the mouse, c
 
 **Changing their size:** hover over your buddy and a small round handle appears at the top corner. Drag it up to make them bigger, down to make them smaller. There's also a **Character size** slider in ⚙. The size is remembered.
 
+### Adding your own picture characters
+
+Besides the built-in characters, Pomo can use your own pictures. They stay in a folder on your computer and are never uploaded anywhere or included in the app.
+
+1. Click the round arrows button, then **＋ Add your own…** at the bottom of the menu. A folder opens.
+2. Make a new folder inside it, named after your character.
+3. Put pictures in it, named after poses. PNG with a see-through background looks best, and the character should face right:
+
+   | File | Used for |
+   | --- | --- |
+   | `idle.png` | standing around (the only one you must have) |
+   | `walk.png` | moving |
+   | `dance.png` | break time |
+   | `sleep.png` | focus time |
+   | `happy.png` | celebrating |
+   | `held.png` | being picked up |
+
+   Any pose you leave out uses `idle.png`.
+4. For real animation, number the frames: `walk-1.png`, `walk-2.png`, `walk-3.png`.
+5. Any other picture, like `sad.png` or `confused.png`, becomes a little moment your character does now and then.
+6. Close Pomo and open it again. Your character is in the menu.
+
+The folder also contains a `HOW-TO.txt` with these same steps. Please only use pictures you made or have the right to use.
+
 ## Set up Spotify (optional)
 
 Pomo works like a remote control for the Spotify app you already have open: it presses play when you start focusing and pause on breaks. You need **Spotify Premium** (Spotify only allows remote control on Premium) and this one-time setup, about five minutes:

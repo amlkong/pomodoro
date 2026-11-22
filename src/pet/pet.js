@@ -19,8 +19,10 @@
     if (id === charId) return;
     charId = id;
     char = window.CHARACTERS[id];
-    flip.innerHTML = char.svg;
+    flip.innerHTML = window.characterMarkup(char);
     flip.classList.remove('left');
+    flip.classList.toggle('img-char', Boolean(char.frames));
+    showFrames();
     actUntil = 0;
     targetX = null;
     waitUntil = 0;
@@ -53,6 +55,21 @@
     if (pose) flip.classList.remove(pose);
     pose = p;
     if (p) flip.classList.add(p);
+    showFrames();
+  }
+
+  // Picture characters: show the image for the current pose, and flip through
+  // its frames if there are several (walk-1.png, walk-2.png, ...).
+  let frameTimer = null;
+  function showFrames() {
+    clearInterval(frameTimer);
+    if (!char || !char.frames) return;
+    const img = flip.querySelector('.char-img');
+    if (!img) return;
+    const list = char.frames[pose] || char.frames.idle;
+    let i = 0;
+    img.src = list[0];
+    if (list.length > 1) frameTimer = setInterval(() => { i = (i + 1) % list.length; img.src = list[i]; }, 160);
   }
 
   function act(p, ms) {
@@ -254,7 +271,7 @@
     }
   });
   window.api.onState(applyState);
-  window.api.getState().then((s) => {
+  window.customCharactersReady.then(() => window.api.getState()).then((s) => {
     applyState(s);
     requestAnimationFrame(frame);
   });
