@@ -123,7 +123,7 @@ If you keep your tasks in Todoist or Notion, or your day in Google Calendar, Pom
 There are two extra tabs:
 
 - **Tasks** shows either Todoist or Notion. A small dropdown at the top of the tab picks which one, and Pomo remembers your choice, so you only set it once.
-- **Calendar** appears once you connect a calendar.
+- **Calendar** shows your events for today or the coming week.
 
 By default everything is read-only: Pomo never changes anything in Todoist, Notion or your calendar. The one exception is an option you can switch on for Todoist, described below.
 
@@ -165,9 +165,9 @@ This uses your calendar's private link, which lets an app read your events witho
 2. Click the **gear** at the top right → **Settings**.
 3. In the left sidebar, under **Settings for my calendars**, click the calendar you want.
 4. Scroll to **Integrate calendar** and copy the **Secret address in iCal format**. It ends in `basic.ics`.
-5. In Pomo, click **⚙** and paste it into **Calendar private link**.
+5. In Pomo, click **⚙**, scroll to the **Calendar** heading, and paste it into **Google Calendar private link**.
 
-A **Calendar** tab appears. It opens on today's events in time order, with all-day events first. Click **today** to switch to the coming week. Repeating events, skipped dates and multi-day events are all handled.
+Open the **Calendar** tab. It opens on today's events in time order, with all-day events first. Click **today** to switch to the coming week. Repeating events, skipped dates and multi-day events are all handled.
 
 Treat that link like a password: anyone who has it can read that calendar. If it ever gets out, Google's **Reset** button next to it makes a new one. School and work Google accounts sometimes have this link switched off by an administrator.
 

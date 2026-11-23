@@ -77,7 +77,7 @@ function eventsFromIcs(text, now = new Date()) {
 }
 
 async function fetchCalendar(link, now = new Date()) {
-  if (!String(link || '').trim()) throw new Error('Paste your calendar\'s private link in settings first');
+  if (!String(link || '').trim()) throw new Error('Your calendar isn\'t connected yet. Click ⚙ and paste its private link under Calendar');
   const url = normalizeLink(link);
   if (!url) throw new Error('That doesn\'t look like a calendar link. It should start with https://');
   let res;

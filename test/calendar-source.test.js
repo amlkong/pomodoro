@@ -95,7 +95,7 @@ test('fetching: reads the link and turns it into events', async () => {
 });
 
 test('fetching: each kind of problem gets a clear message', async () => {
-  await assert.rejects(fetchCalendar('', NOW), /private link in settings/);
+  await assert.rejects(fetchCalendar('', NOW), /isn't connected yet/);
   await assert.rejects(fetchCalendar('http://example.com/a.ics', NOW), /doesn't look like a calendar link/);
   global.fetch = async () => ({ status: 404, ok: false, text: async () => '' });
   await assert.rejects(fetchCalendar('https://calendar.google.com/x.ics', NOW), /refused/);

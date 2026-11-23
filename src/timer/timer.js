@@ -83,15 +83,13 @@ function render(s) {
   for (const id of ['taskApp', 'taskAppSetting']) if (document.activeElement !== $(id)) $(id).value = taskApp;
   $('todoistFields').hidden = taskApp !== 'todoist';
   $('notionFields').hidden = taskApp !== 'notion';
-  $('tabCalendar').hidden = !s.sources.calendar;
   $('calendarOff').hidden = !s.sources.calendar;
-  $('calendarLink').placeholder = s.sources.calendar ? 'saved ✓  (paste a new one to replace)' : 'Google Calendar → Secret address in iCal format';
+  $('calendarLink').placeholder = s.sources.calendar ? 'saved ✓  (paste a new one to replace)' : 'Secret address in iCal format (ends in basic.ics)';
   $('todoistOff').hidden = !s.sources.todoist;
   $('notionOff').hidden = !s.settings.notionLink && !s.sources.notion;
   $('todoistToken').placeholder = s.sources.todoist ? 'saved ✓  (paste a new one to replace)' : 'Todoist → Settings → Integrations → Developer';
   $('notionToken').placeholder = s.sources.notion ? 'saved ✓  (paste a new one to replace)' : 'from notion.so/profile/integrations';
   if (document.activeElement !== $('notionLink')) $('notionLink').value = s.settings.notionLink || '';
-  if (tab === 'calendar' && !s.sources.calendar) tab = 'session';
   $('syncMsg').textContent = s.syncMsg || '';
   // the Todoist list shows extra buttons when syncing is switched on or off
   if (syncShown !== s.settings.todoistSync) { syncShown = s.settings.todoistSync; tasksKey = ''; }

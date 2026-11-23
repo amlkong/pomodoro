@@ -65,7 +65,7 @@
         <span class="todo-tabs" role="tablist">
           <button id="tabSession" role="tab" class="on">To do</button>
           <button id="tabTasks" role="tab">Tasks</button>
-          <button id="tabCalendar" role="tab" hidden>Calendar</button>
+          <button id="tabCalendar" role="tab">Calendar</button>
         </span>
         <button id="clearDone" hidden>clear done</button>
         <span id="extTools" hidden>
@@ -129,8 +129,9 @@
         <input type="text" id="notionLink" placeholder="https://www.notion.so/..." spellcheck="false">
       </label>
     </div>
-    <label class="col">Calendar private link <button class="link" id="calendarOff" type="button" hidden>disconnect</button>
-      <input type="password" id="calendarLink" placeholder="Google Calendar → Secret address in iCal format" spellcheck="false" autocomplete="off">
+    <h3>Calendar</h3>
+    <label class="col">Google Calendar private link <button class="link" id="calendarOff" type="button" hidden>disconnect</button>
+      <input type="password" id="calendarLink" placeholder="Secret address in iCal format (ends in basic.ics)" spellcheck="false" autocomplete="off">
     </label>
     <h3>About</h3>
     <div class="row"><span id="verLong">Pomo</span> <button class="link" id="checkUpdates">Check for updates</button></div>
