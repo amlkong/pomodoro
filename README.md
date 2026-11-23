@@ -83,6 +83,8 @@ Two buttons at the top of the window control the character:
   - **in window**: stays inside the timer window on a little floor.
   - **hidden**: goes away until you click again.
 
+During a focus round your buddy settles down quietly, then every five minutes or so gets up, wanders to a new spot, and settles again.
+
 Click your buddy for a little hello. You can also pick them up with the mouse, carry them anywhere, and drop them.
 
 **Changing their size:** hover over your buddy and a small round handle appears at the top corner. Drag it up to make them bigger, down to make them smaller. There's also a **Character size** slider in ⚙. The size is remembered.

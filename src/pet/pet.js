@@ -8,6 +8,7 @@
 
   const WALK_SPEED = 55; // px per second
   const GRAVITY = 2200;
+  const NAP_MS = [4 * 60 * 1000, 6 * 60 * 1000]; // how long he stays put during focus
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
   // Which character is on stage. Everything character-specific (drawing, extra
@@ -22,6 +23,7 @@
     flip.innerHTML = char.svg;
     flip.classList.remove('left');
     actUntil = 0;
+    actPose = '';
     targetX = null;
     waitUntil = 0;
     setPose('');
@@ -36,6 +38,8 @@
   let waitUntil = 0;    // stay put until then
   let actPose = '';     // a short action that plays out before anything else
   let actUntil = 0;
+  let restPose = '';    // what to go back to once that action ends
+  let focusFresh = false; // a focus round just began: head for the corner first
   let drag = null;
   let hovering = false;
   let bubbleTimer = null;
@@ -56,6 +60,8 @@
   }
 
   function act(p, ms) {
+    // remember what he was doing, so a nap or a dance carries on afterwards
+    if (!actPose) restPose = pose === 'walking' || pose === 'held' ? '' : pose;
     actPose = p;
     actUntil = performance.now() + ms;
     targetX = null;
@@ -84,9 +90,24 @@
   // Decide what to do next once Pomo has arrived somewhere or finished an action.
   function plan(now) {
     if (mode === 'focus') {
-      const corner = maxX() - 8;
-      if (Math.abs(x - corner) > 4) targetX = corner;
-      else setPose('sitting');
+      // Settle down for a nap of around five minutes, then wander somewhere
+      // new and settle again, so he isn't parked in one corner all round.
+      if (focusFresh) {
+        focusFresh = false;
+        const corner = maxX() - 8;
+        if (Math.abs(x - corner) > 4) { targetX = corner; return; }
+      }
+      if (pose === 'sitting') {
+        // pick a spot a fair walk away from here
+        const far = maxX() * 0.25;
+        let spot = rand(0, maxX());
+        for (let i = 0; i < 6 && Math.abs(spot - x) < far; i++) spot = rand(0, maxX());
+        targetX = spot;
+      } else {
+        const [min, max] = (window.POMO_DEBUG && window.POMO_DEBUG.napMs) || NAP_MS;
+        setPose('sitting');
+        waitUntil = now + rand(min, max);
+      }
       return;
     }
     if (mode === 'break') {
@@ -136,6 +157,10 @@
       }
     } else if (now < actUntil) {
       setPose(actPose);
+    } else if (actPose) {
+      // the little action is over: go back to what he was doing
+      actPose = '';
+      setPose(restPose);
     } else if (targetX !== null) {
       const dir = Math.sign(targetX - x);
       x += dir * (mode === 'break' ? WALK_SPEED * 1.4 : WALK_SPEED) * dt;
@@ -173,6 +198,7 @@
     wasPaused = paused;
     if (next === mode) return;
     mode = next;
+    focusFresh = mode === 'focus';
     targetX = null;
     waitUntil = 0;
     if (performance.now() < actUntil) return; // mid celebration, let that finish
