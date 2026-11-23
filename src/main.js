@@ -23,6 +23,8 @@ const DEFAULTS = {
   todoistToken: '', // kept encrypted, never sent to the window
   notionToken: '',  // kept encrypted, never sent to the window
   notionLink: '',
+  todoistSync: false, // opt-in: ticking a Todoist task in Pomo also completes it in Todoist
+  taskApp: '',      // 'todoist' or 'notion': which one the Tasks tab shows
   calendarLink: '', // a private link, so kept encrypted like the tokens
   tasks: [], // { id, text, done }
 };
@@ -40,6 +42,7 @@ let updateStatus = '';
 const startedAt = Date.now();
 let endAt = 0;
 let spotifyMsg = '';
+let syncMsg = ''; // last problem telling Todoist about a ticked task, if any
 let lastWantMusic = null;
 
 // ---------- settings ----------
@@ -114,6 +117,7 @@ function publicState() {
     ...state,
     settings: safeSettings,
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
+    syncMsg,
     sources: { todoist: Boolean(todoistToken), notion: Boolean(notionToken && settings.notionLink), calendar: Boolean(calendarLink) },
     maximized: Boolean(restoreBounds),
     update,
@@ -292,7 +296,7 @@ function registerIpc() {
     if ('shortMin' in patch) settings.shortMin = clampInt(patch.shortMin, 1, 60, settings.shortMin);
     if ('longMin' in patch) settings.longMin = clampInt(patch.longMin, 1, 120, settings.longMin);
     if ('longEvery' in patch) settings.longEvery = clampInt(patch.longEvery, 2, 12, settings.longEvery);
-    for (const k of ['autoStart', 'showPet', 'musicOnBreaks', 'alarmSound']) {
+    for (const k of ['autoStart', 'showPet', 'musicOnBreaks', 'alarmSound', 'todoistSync']) {
       if (k in patch) settings[k] = Boolean(patch[k]);
     }
     if (patch.petRoam === 'screen' || patch.petRoam === 'window') settings.petRoam = patch.petRoam;
@@ -305,6 +309,7 @@ function registerIpc() {
     if ('spotifyClientId' in patch) settings.spotifyClientId = String(patch.spotifyClientId || '').trim();
     if ('todoistToken' in patch) writeSecret('todoistToken', patch.todoistToken);
     if ('notionToken' in patch) writeSecret('notionToken', patch.notionToken);
+    if (patch.taskApp === 'todoist' || patch.taskApp === 'notion') settings.taskApp = patch.taskApp;
     if ('notionLink' in patch) settings.notionLink = String(patch.notionLink || '').trim().slice(0, 400);
     if ('calendarLink' in patch) writeSecret('calendarLink', String(patch.calendarLink || '').slice(0, 600));
     saveSettings();
@@ -317,24 +322,59 @@ function registerIpc() {
 
   // to-do list
   const tasksChanged = () => { saveSettings(); broadcast(); };
-  ipcMain.on('tasks:add', (_e, text) => {
-    const clean = String(text || '').trim().slice(0, 140);
+  // A task is plain text, or { text, source, sourceId } when it was picked from
+  // Todoist, so Pomo knows which Todoist task it stands for.
+  ipcMain.on('tasks:add', (_e, input) => {
+    const fromApp = input && typeof input === 'object';
+    const clean = String((fromApp ? input.text : input) || '').trim().slice(0, 140);
     if (!clean || settings.tasks.length >= 100) return;
-    settings.tasks.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text: clean, done: false });
+    const task = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text: clean, done: false };
+    if (fromApp && input.source === 'todoist' && input.sourceId) {
+      task.source = 'todoist';
+      task.sourceId = String(input.sourceId).slice(0, 64);
+    }
+    settings.tasks.push(task);
     tasksChanged();
   });
+
+  // Tells Todoist about a tick or an un-tick, when that option is switched on.
+  const syncTodoist = (sourceId, done) => {
+    if (!settings.todoistSync || !sourceId) return Promise.resolve(false);
+    return taskSources.setTodoistDone(readSecret('todoistToken'), sourceId, done).then(
+      () => { syncMsg = ''; broadcast(); return true; },
+      (e) => { syncMsg = e.message; broadcast(); return false; },
+    );
+  };
+
   ipcMain.on('tasks:toggle', (_e, id) => {
     const task = settings.tasks.find((t) => t.id === id);
     if (!task) return;
     task.done = !task.done;
     if (task.done) petEvent({ type: 'task-done', allDone: settings.tasks.every((t) => t.done) });
     tasksChanged();
+    if (task.source === 'todoist') syncTodoist(task.sourceId, task.done);
+  });
+
+  // Completing straight from the Todoist list, without adding it to the session first.
+  ipcMain.handle('sources:complete', async (_e, which, sourceId) => {
+    if (which !== 'todoist') return { error: 'Only Todoist tasks can be completed from here' };
+    if (!settings.todoistSync) return { error: 'Turn on "also complete it in Todoist" in ⚙ first' };
+    const ok = await syncTodoist(String(sourceId), true);
+    if (!ok) return { error: syncMsg };
+    // if the same task is in this session's list, tick it there too
+    let ticked = false;
+    for (const t of settings.tasks) {
+      if (t.source === 'todoist' && t.sourceId === String(sourceId) && !t.done) { t.done = true; ticked = true; }
+    }
+    if (ticked) tasksChanged();
+    petEvent({ type: 'task-done', allDone: settings.tasks.length > 0 && settings.tasks.every((t) => t.done) });
+    return { ok: true };
   });
   ipcMain.on('tasks:remove', (_e, id) => {
     settings.tasks = settings.tasks.filter((t) => t.id !== id);
     tasksChanged();
   });
-  // read-only task lists from other apps, shown as extra tabs next to the to-do list
+  // task lists from other apps, shown as extra tabs next to the to-do list
   ipcMain.handle('sources:fetch', async (_e, which) => {
     try {
       if (which === 'todoist') return { items: await taskSources.fetchTodoist(readSecret('todoistToken')) };

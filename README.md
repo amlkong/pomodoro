@@ -120,15 +120,27 @@ For the closed-Spotify case, paste a playlist link in ⚙ (step 7). A freshly op
 
 If you keep your tasks in Todoist or Notion, or your day in Google Calendar, Pomo can show them in tabs next to the to-do list. You look through them there and click **+** on the ones you want to work on this session, which copies them into your Pomo to-do list.
 
-It is read-only. Pomo never changes, completes or deletes anything in Todoist, Notion or your calendar, and ticking a task off in Pomo doesn't touch the original.
+There are two extra tabs:
+
+- **Tasks** shows either Todoist or Notion. A small dropdown at the top of the tab picks which one, and Pomo remembers your choice, so you only set it once.
+- **Calendar** appears once you connect a calendar.
+
+By default everything is read-only: Pomo never changes anything in Todoist, Notion or your calendar. The one exception is an option you can switch on for Todoist, described below.
 
 ### Todoist
 
 1. In Todoist, open **Settings → Integrations → Developer**.
 2. Copy your **API token**.
-3. In Pomo, click **⚙** and paste it into **Todoist API token**.
+3. In Pomo, click **⚙**. Under **Task lists**, set **I keep my tasks in** to **Todoist** and paste the token into **Todoist API token**.
 
-A **Todoist** tab appears next to **To do**. It opens on what's overdue and due today. Click **today** to switch to all your open tasks, and **↻** to refresh.
+Open the **Tasks** tab. It starts on what's overdue and due today. Click **today** to switch to all your open tasks, and **↻** to refresh.
+
+**Checking tasks off in Todoist from Pomo.** In ⚙, turn on **Ticking a task also completes it in Todoist**. Then:
+
+- a task you picked from Todoist (it carries a small "Todoist" tag in your to-do list) is completed in Todoist when you tick it in Pomo, and reopened there if you untick it
+- each row in the Tasks tab gets a round ✓ button that completes that task in Todoist directly, without adding it to your session
+
+With the option off, ticking only affects Pomo's own list. Tasks you typed in yourself are never sent to Todoist.
 
 ### Notion
 
@@ -136,12 +148,14 @@ A **Todoist** tab appears next to **To do**. It opens on what's overdue and due 
 2. Copy the **Internal Integration Secret**.
 3. In Notion, open the page or database that holds your tasks. Click **•••** at the top right → **Connections** → add your "Pomo" integration. Notion only lets an integration see pages you've shared with it this way.
 4. Copy the link to that page (**Share → Copy link**).
-5. In Pomo, click **⚙**, paste the secret into **Notion integration secret** and the link into **Notion page or database link**.
+5. In Pomo, click **⚙**. Under **Task lists**, set **I keep my tasks in** to **Notion**, then paste the secret into **Notion integration secret** and the link into **Notion page or database link**.
 
-A **Notion** tab appears. It works with either kind of page:
+Open the **Tasks** tab. It works with either kind of page:
 
 - a **database** (a table or board of tasks): each row is a task, and rows that are checked off or have a status like Done are left out
 - a **regular page** with to-do checkboxes: each unchecked box is a task
+
+Notion is read-only in Pomo: ticking a task here doesn't change the Notion page.
 
 ### Google Calendar
 
@@ -201,7 +215,7 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 
 **Mac says the app can't be opened.** Right-click → **Open**, or System Settings → Privacy & Security → **Open Anyway**.
 
-**The Todoist, Notion or Calendar tab shows an error.** The message says what's wrong. "The calendar link was refused" means the link is incomplete or was reset, so copy the Secret address in iCal format again. "Didn't accept that token" means the token was copied incompletely, so paste it again. "Notion can't see that page" means the page hasn't been shared with your integration yet (step 3 of the Notion setup).
+**The Tasks or Calendar tab shows an error.** The message says what's wrong. "The calendar link was refused" means the link is incomplete or was reset, so copy the Secret address in iCal format again. "Didn't accept that token" means the token was copied incompletely, so paste it again. "Notion can't see that page" means the page hasn't been shared with your integration yet (step 3 of the Notion setup).
 
 **Spotify says it couldn't find Spotify.** Pomo tried to open the Spotify desktop app and it didn't appear within about 25 seconds. Check that the Spotify app is installed and that you're logged in to it, then press Start or the 🎧 button again.
 
@@ -250,7 +264,7 @@ To add one, copy `cat.js` and `cat.css`, change the drawing and animations, then
 ```
 src/main.js          timer logic, windows, to-do storage, music control
 src/spotify.js       Spotify login and play/pause
-src/task-sources.js  read-only task lists from Todoist and Notion
+src/task-sources.js  task lists from Todoist and Notion (and completing Todoist tasks, if switched on)
 src/calendar-source.js  read-only events from a calendar's private link
 src/characters/      one .js and one .css per character
 src/pet/             how a character behaves (shared by the screen overlay and the timer window)

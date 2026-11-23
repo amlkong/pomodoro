@@ -64,12 +64,15 @@
       <div class="todo-head">
         <span class="todo-tabs" role="tablist">
           <button id="tabSession" role="tab" class="on">To do</button>
-          <button id="tabTodoist" role="tab" hidden>Todoist</button>
-          <button id="tabNotion" role="tab" hidden>Notion</button>
+          <button id="tabTasks" role="tab">Tasks</button>
           <button id="tabCalendar" role="tab" hidden>Calendar</button>
         </span>
         <button id="clearDone" hidden>clear done</button>
         <span id="extTools" hidden>
+          <select id="taskApp" title="Which app your tasks come from" aria-label="Task app">
+            <option value="todoist">Todoist</option>
+            <option value="notion">Notion</option>
+          </select>
           <button id="extFilter" title="Switch between today and everything"></button>
           <button id="extRefresh" title="Refresh" aria-label="Refresh">↻</button>
         </span>
@@ -77,6 +80,7 @@
       <div id="sessionPane">
         <input type="text" id="newTask" placeholder="Add a task and press Enter" maxlength="140" spellcheck="false">
         <ul id="tasks"></ul>
+        <div class="status" id="syncMsg"></div>
       </div>
       <div id="extPane" hidden>
         <div class="status" id="extStatus"></div>
@@ -105,15 +109,26 @@
     </label>
     <button class="wide" id="spotConnect">Connect Spotify</button>
     <h3>Task lists</h3>
-    <label class="col">Todoist API token <button class="link" id="todoistOff" type="button" hidden>disconnect</button>
-      <input type="password" id="todoistToken" placeholder="Todoist → Settings → Integrations → Developer" spellcheck="false" autocomplete="off">
+    <label class="row">I keep my tasks in
+      <select id="taskAppSetting" aria-label="Task app">
+        <option value="todoist">Todoist</option>
+        <option value="notion">Notion</option>
+      </select>
     </label>
-    <label class="col">Notion integration secret <button class="link" id="notionOff" type="button" hidden>disconnect</button>
-      <input type="password" id="notionToken" placeholder="from notion.so/profile/integrations" spellcheck="false" autocomplete="off">
-    </label>
-    <label class="col">Notion page or database link
-      <input type="text" id="notionLink" placeholder="https://www.notion.so/..." spellcheck="false">
-    </label>
+    <div id="todoistFields">
+      <label class="col">Todoist API token <button class="link" id="todoistOff" type="button" hidden>disconnect</button>
+        <input type="password" id="todoistToken" placeholder="Todoist → Settings → Integrations → Developer" spellcheck="false" autocomplete="off">
+      </label>
+      <label class="row">Ticking a task also completes it in Todoist <input type="checkbox" id="todoistSync"></label>
+    </div>
+    <div id="notionFields" hidden>
+      <label class="col">Notion integration secret <button class="link" id="notionOff" type="button" hidden>disconnect</button>
+        <input type="password" id="notionToken" placeholder="from notion.so/profile/integrations" spellcheck="false" autocomplete="off">
+      </label>
+      <label class="col">Notion page or database link
+        <input type="text" id="notionLink" placeholder="https://www.notion.so/..." spellcheck="false">
+      </label>
+    </div>
     <label class="col">Calendar private link <button class="link" id="calendarOff" type="button" hidden>disconnect</button>
       <input type="password" id="calendarLink" placeholder="Google Calendar → Secret address in iCal format" spellcheck="false" autocomplete="off">
     </label>

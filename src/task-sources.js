@@ -1,6 +1,6 @@
-// Read-only views of tasks kept in other apps (Todoist, Notion), so they can be
-// looked at inside Pomo and picked into the session's to-do list. Nothing here
-// ever changes or completes a task in those apps.
+// Views of tasks kept in other apps (Todoist, Notion), so they can be looked at
+// inside Pomo and picked into the session's to-do list. Reading is all it does,
+// with one opt-in exception: completing a Todoist task (setTodoistDone).
 
 const TODOIST_URL = 'https://api.todoist.com/api/v1/tasks';
 const NOTION_URL = 'https://api.notion.com/v1';
@@ -35,7 +35,7 @@ function todoistLabel(due, today) {
 }
 
 async function fetchTodoist(token) {
-  if (!token) throw new Error('Add your Todoist token in settings first');
+  if (!token) throw new Error('Todoist isn\'t connected yet. Click ⚙ and paste your Todoist token');
   const headers = { Authorization: `Bearer ${token}` };
   const tasks = [];
   let cursor = '';
@@ -59,6 +59,20 @@ async function fetchTodoist(token) {
     // due soonest first, then the ones without a date, most important first within a day
     .sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || b.priority - a.priority)
     .slice(0, MAX_ITEMS);
+}
+
+// Marks a Todoist task done, or brings it back. Only ever called when the
+// person has switched on "also complete it in Todoist".
+async function setTodoistDone(token, id, done) {
+  if (!token) throw new Error('Todoist isn\'t connected yet. Click ⚙ and paste your Todoist token');
+  const r = await getJson(`${TODOIST_URL}/${encodeURIComponent(id)}/${done ? 'close' : 'reopen'}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  }, 'Todoist');
+  if (r.ok) return;
+  if (r.status === 401 || r.status === 403) throw new Error('Todoist didn\'t accept that token. Copy it again from Todoist settings');
+  if (r.status === 404) throw new Error('Todoist couldn\'t find that task. It may have been deleted or finished already');
+  throw new Error(`Todoist couldn't ${done ? 'complete' : 'reopen'} that task (${r.status})`);
 }
 
 // ---------- Notion ----------
@@ -144,9 +158,9 @@ async function notionPageTodos(token, blockId, depth = 0, out = []) {
 }
 
 async function fetchNotion(token, link) {
-  if (!token) throw new Error('Add your Notion integration secret in settings first');
+  if (!token) throw new Error('Notion isn\'t connected yet. Click ⚙ and paste your Notion secret and page link');
   const id = notionId(link);
-  if (!id) throw new Error('Paste the link to your Notion page or database in settings');
+  if (!id) throw new Error('Almost there. Click ⚙ and paste the link to your Notion page or database');
 
   // 1. A database, the ordinary way.
   let q = await queryAll(token, `/databases/${id}/query`, NOTION_OLD);
@@ -173,4 +187,4 @@ async function fetchNotion(token, link) {
   return (await notionPageTodos(token, id)).slice(0, MAX_ITEMS);
 }
 
-module.exports = { fetchTodoist, fetchNotion, notionId, notionRowToTask, todoistLabel };
+module.exports = { fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask, todoistLabel };

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { fetchTodoist, fetchNotion, notionId, notionRowToTask } = require('../src/task-sources');
+const { fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask } = require('../src/task-sources');
 
 const reply = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
 const day = (offset) => {
@@ -46,9 +46,25 @@ test('Todoist: also understands a plain list reply', async () => {
 test('Todoist: a wrong token, a missing token and no internet each get a clear message', async () => {
   global.fetch = async () => reply(401, {});
   await assert.rejects(fetchTodoist('bad'), /didn't accept that token/);
-  await assert.rejects(fetchTodoist(''), /Add your Todoist token/);
+  await assert.rejects(fetchTodoist(''), /Todoist isn't connected yet/);
   global.fetch = async () => { throw new Error('ENOTFOUND'); };
   await assert.rejects(fetchTodoist('t'), /Couldn't reach Todoist/);
+});
+
+test('Todoist: completing and reopening a task call the right address', async () => {
+  const calls = [];
+  global.fetch = async (url, init) => { calls.push(`${init.method} ${url.replace('https://api.todoist.com', '')} ${init.headers.Authorization}`); return reply(204, {}); };
+  await setTodoistDone('secret', '8001', true);
+  await setTodoistDone('secret', '8001', false);
+  assert.deepStrictEqual(calls, ['POST /api/v1/tasks/8001/close Bearer secret', 'POST /api/v1/tasks/8001/reopen Bearer secret']);
+});
+
+test('Todoist: a task that is gone, a bad token and no token each get a clear message', async () => {
+  global.fetch = async () => reply(404, {});
+  await assert.rejects(setTodoistDone('secret', '1', true), /couldn't find that task/);
+  global.fetch = async () => reply(401, {});
+  await assert.rejects(setTodoistDone('bad', '1', true), /didn't accept that token/);
+  await assert.rejects(setTodoistDone('', '1', true), /isn't connected yet/);
 });
 
 // ---------- Notion ----------
@@ -125,8 +141,8 @@ test('Notion: an unshared page explains how to connect the integration', async (
 });
 
 test('Notion: missing pieces and a wrong token each get a clear message', async () => {
-  await assert.rejects(fetchNotion('', ID), /integration secret/);
-  await assert.rejects(fetchNotion('secret', 'nope'), /Paste the link/);
+  await assert.rejects(fetchNotion('', ID), /Notion isn't connected yet/);
+  await assert.rejects(fetchNotion('secret', 'nope'), /paste the link/);
   global.fetch = async () => reply(401, { message: 'API token is invalid.' });
   await assert.rejects(fetchNotion('bad', ID), /didn't accept that token/);
 });

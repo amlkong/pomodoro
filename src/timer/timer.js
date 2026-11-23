@@ -5,13 +5,14 @@ const LABELS = {
   short: ['a little break', 'breathe and stretch', 'paused, no rush'],
   long: ['a long break', 'you earned this', 'paused, no rush'],
 };
-const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'alarmSound', 'petScale', 'musicOnBreaks', 'spotifyClientId', 'spotifyPlaylist'];
+const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'alarmSound', 'petScale', 'musicOnBreaks', 'todoistSync', 'spotifyClientId', 'spotifyPlaylist'];
 
 const mini = $('mini');
 let miniChar = '';
 let current = null;
 let settingsFilled = false;
 let tasksKey = '';
+let syncShown = null;
 
 function fmt(ms) {
   const total = Math.ceil(ms / 1000);
@@ -77,8 +78,11 @@ function render(s) {
   $('msg').textContent = s.spotify.message || '';
 
   // which extra tabs exist depends on what is connected in settings
-  $('tabTodoist').hidden = !s.sources.todoist;
-  $('tabNotion').hidden = !s.sources.notion;
+  // the saved choice wins; before one is made, use whichever app is connected
+  taskApp = s.settings.taskApp || (s.sources.notion && !s.sources.todoist ? 'notion' : 'todoist');
+  for (const id of ['taskApp', 'taskAppSetting']) if (document.activeElement !== $(id)) $(id).value = taskApp;
+  $('todoistFields').hidden = taskApp !== 'todoist';
+  $('notionFields').hidden = taskApp !== 'notion';
   $('tabCalendar').hidden = !s.sources.calendar;
   $('calendarOff').hidden = !s.sources.calendar;
   $('calendarLink').placeholder = s.sources.calendar ? 'saved ✓  (paste a new one to replace)' : 'Google Calendar → Secret address in iCal format';
@@ -87,7 +91,10 @@ function render(s) {
   $('todoistToken').placeholder = s.sources.todoist ? 'saved ✓  (paste a new one to replace)' : 'Todoist → Settings → Integrations → Developer';
   $('notionToken').placeholder = s.sources.notion ? 'saved ✓  (paste a new one to replace)' : 'from notion.so/profile/integrations';
   if (document.activeElement !== $('notionLink')) $('notionLink').value = s.settings.notionLink || '';
-  if (tab !== 'session' && !s.sources[tab]) tab = 'session';
+  if (tab === 'calendar' && !s.sources.calendar) tab = 'session';
+  $('syncMsg').textContent = s.syncMsg || '';
+  // the Todoist list shows extra buttons when syncing is switched on or off
+  if (syncShown !== s.settings.todoistSync) { syncShown = s.settings.todoistSync; tasksKey = ''; }
   renderTasks(s.settings.tasks || []);
   if (document.activeElement !== $('petScale')) $('petScale').value = s.settings.petScale;
 
@@ -124,6 +131,14 @@ function renderTasks(tasks) {
     const text = document.createElement('span');
     text.textContent = t.text;
     label.append(box, text);
+    if (t.source === 'todoist') {
+      // came from Todoist: with syncing on, ticking it here completes it there too
+      const tag = document.createElement('i');
+      tag.className = 'from';
+      tag.textContent = 'Todoist';
+      tag.title = current && current.settings.todoistSync ? 'Ticking this also completes it in Todoist' : 'Picked from Todoist';
+      label.append(tag);
+    }
     const del = document.createElement('button');
     del.textContent = '×';
     del.title = 'Remove';
@@ -134,8 +149,11 @@ function renderTasks(tasks) {
   }
 }
 
-// ---------- tabs: this session's to-do list, plus read-only lists from Todoist and Notion ----------
-let tab = 'session';
+// ---------- tabs: this session's to-do list, a Tasks tab (Todoist or Notion), and Calendar ----------
+let tab = 'session';   // 'session', 'tasks' or 'calendar'
+let taskApp = 'todoist'; // which app the Tasks tab reads from; saved per person
+// the list a tab shows: the Tasks tab follows the chosen app
+const sourceOf = (t) => (t === 'tasks' ? taskApp : t);
 let anyDone = false;
 let sessionTexts = new Set();
 const ext = { todoist: { filter: '' }, notion: { filter: 'all' }, calendar: { filter: 'today' } }; // items, error, loading, at
@@ -149,13 +167,13 @@ function showTab(next) {
   tab = next;
   const isSession = tab === 'session';
   $('tabSession').classList.toggle('on', isSession);
-  $('tabTodoist').classList.toggle('on', tab === 'todoist');
-  $('tabNotion').classList.toggle('on', tab === 'notion');
+  $('tabTasks').classList.toggle('on', tab === 'tasks');
   $('tabCalendar').classList.toggle('on', tab === 'calendar');
   $('sessionPane').hidden = !isSession;
   $('extPane').hidden = isSession;
   $('clearDone').hidden = !isSession || !anyDone;
   $('extTools').hidden = isSession;
+  $('taskApp').hidden = tab !== 'tasks';
   if (!isSession) renderExternal();
 }
 
@@ -180,8 +198,8 @@ async function loadExternal(which, force) {
 
 function renderExternal() {
   if (tab === 'session') return;
-  const src = ext[tab];
-  const info = EXT[tab];
+  const src = ext[sourceOf(tab)];
+  const info = EXT[sourceOf(tab)];
   const name = info.name;
   const items = (src.items || []).filter((t) => src.filter !== 'today' || t.today);
   $('extFilter').hidden = !info.filters;
@@ -202,7 +220,8 @@ function renderExternal() {
     add.disabled = added;
     add.title = added ? 'Already in your to-do list' : 'Add to this session';
     add.setAttribute('aria-label', `${added ? 'Already added' : 'Add'}: ${t.text}`);
-    add.onclick = () => window.api.addTask(t.text);
+    const fromTodoist = sourceOf(tab) === 'todoist';
+    add.onclick = () => window.api.addTask(fromTodoist ? { text: t.text, source: 'todoist', sourceId: t.id } : t.text);
     const text = document.createElement('span');
     text.className = 'text';
     text.textContent = t.text;
@@ -213,18 +232,43 @@ function renderExternal() {
       tag.textContent = t.label;
       li.append(tag);
     }
+    if (fromTodoist && current && current.settings.todoistSync) {
+      // complete it in Todoist right here, without adding it to the session
+      const done = document.createElement('button');
+      done.className = 'complete';
+      done.textContent = '✓';
+      done.title = 'Complete in Todoist';
+      done.setAttribute('aria-label', `Complete in Todoist: ${t.text}`);
+      done.onclick = async () => {
+        done.disabled = true;
+        const res = await window.api.completeSource('todoist', t.id);
+        if (res.error) { src.error = res.error; done.disabled = false; }
+        else src.items = (src.items || []).filter((x) => x.id !== t.id);
+        renderExternal();
+      };
+      li.append(done);
+    }
     ul.append(li);
   }
 }
 
 $('tabSession').onclick = () => showTab('session');
-$('tabTodoist').onclick = () => { showTab('todoist'); loadExternal('todoist'); };
-$('tabNotion').onclick = () => { showTab('notion'); loadExternal('notion'); };
+$('tabTasks').onclick = () => { showTab('tasks'); loadExternal(taskApp); };
+// switching the app is remembered, so the dropdown only needs touching once
+function chooseTaskApp(app) {
+  if (app !== 'todoist' && app !== 'notion') return;
+  taskApp = app;
+  window.api.updateSettings({ taskApp: app });
+  if (tab === 'tasks') { showTab('tasks'); loadExternal(taskApp); }
+}
+$('taskApp').onchange = (e) => chooseTaskApp(e.target.value);
+$('taskAppSetting').onchange = (e) => chooseTaskApp(e.target.value);
 $('tabCalendar').onclick = () => { showTab('calendar'); loadExternal('calendar'); };
-$('extRefresh').onclick = () => loadExternal(tab, true);
+$('extRefresh').onclick = () => loadExternal(sourceOf(tab), true);
 $('extFilter').onclick = () => {
   if (tab === 'session') return;
-  ext[tab].filter = ext[tab].filter === 'today' ? 'all' : 'today';
+  const src = ext[sourceOf(tab)];
+  src.filter = src.filter === 'today' ? 'all' : 'today';
   renderExternal();
 };
 
