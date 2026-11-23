@@ -1,0 +1,107 @@
+/* Aki the bunny's moves. A pose class sits on the wrapper around the SVG:
+   .walking .dancing .sitting .jumping .held, plus .periscoping and .munching */
+.b-all { transform-origin: 50% 100%; }
+.b-body { transform-origin: 50% 100%; animation: b-breathe 2.6s ease-in-out infinite; }
+.b-head { transform-origin: 50% 92%; }
+.b-eyes { transform-origin: 50% 50%; animation: b-blink 5s infinite; }
+.b-nose { transform-origin: 50% 30%; animation: b-wiggle .5s ease-in-out infinite; }
+.b-ear-l { transform-origin: 85% 4%; }
+.b-ear-r { transform-origin: 15% 4%; }
+.b-paw { transform-origin: 50% 10%; }
+.b-treat, .b-zz { opacity: 0; }
+
+@keyframes b-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
+@keyframes b-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+@keyframes b-wiggle { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-1px) scale(1.06, .94); } }
+
+/* walking: little hops */
+.walking .b-all { animation: b-hop .44s ease-in-out infinite; }
+.walking .b-ear-l { animation: b-flop-l .44s ease-in-out infinite; }
+.walking .b-ear-r { animation: b-flop-r .44s ease-in-out infinite; }
+.walking .b-foot-l, .walking .b-foot-r { animation: b-kick .44s ease-in-out infinite; }
+@keyframes b-hop {
+  0%, 100% { transform: translateY(0) scale(1.06, .93); }
+  45% { transform: translateY(-13px) scale(.97, 1.05); }
+}
+@keyframes b-flop-l { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(22deg); } }
+@keyframes b-flop-r { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(-22deg); } }
+@keyframes b-kick { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(4px); } }
+
+/* dancing: swaying with ears swinging */
+.dancing .b-all { animation: b-groove .9s ease-in-out infinite; }
+.dancing .b-paw-l { animation: b-paw-up-l .45s ease-in-out infinite alternate; }
+.dancing .b-paw-r { animation: b-paw-up-r .45s ease-in-out infinite alternate-reverse; }
+.dancing .b-ear-l { animation: b-swing-l .45s ease-in-out infinite alternate; }
+.dancing .b-ear-r { animation: b-swing-r .45s ease-in-out infinite alternate; }
+.dancing .b-head { animation: b-bop .45s ease-in-out infinite alternate; }
+@keyframes b-groove {
+  0%, 100% { transform: rotate(-7deg) translateY(0); }
+  25% { transform: rotate(0deg) translateY(-7px); }
+  50% { transform: rotate(7deg) translateY(0); }
+  75% { transform: rotate(0deg) translateY(-7px); }
+}
+@keyframes b-paw-up-l { from { transform: translate(-6px, -6px) rotate(25deg); } to { transform: translate(-14px, -24px) rotate(55deg); } }
+@keyframes b-paw-up-r { from { transform: translate(6px, -6px) rotate(-25deg); } to { transform: translate(14px, -24px) rotate(-55deg); } }
+@keyframes b-swing-l { from { transform: rotate(-4deg); } to { transform: rotate(26deg); } }
+@keyframes b-swing-r { from { transform: rotate(-26deg); } to { transform: rotate(4deg); } }
+@keyframes b-bop { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+
+/* sitting: a sleepy loaf through focus time */
+.sitting .b-all { transform: translateY(8px) scale(1.1, .88); }
+.sitting .b-paw { transform: translateY(-8px) scaleY(.5); }
+.sitting .b-body { animation: b-breathe-deep 4.5s ease-in-out infinite; }
+.sitting .b-head { transform: translateY(10px); }
+.sitting .b-eyes { animation: none; transform: scaleY(.1); }
+.sitting .b-nose { animation-duration: 1.6s; }
+.sitting .b-zz { animation: b-zz 3s ease-in-out infinite; }
+@keyframes b-breathe-deep { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .96); } }
+@keyframes b-zz { 0% { opacity: 0; transform: translate(-4px, 12px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -6px); } }
+
+/* periscoping: up on his back legs for a good look around */
+.periscoping .b-all { animation: b-stand 2.2s ease-in-out both; }
+.periscoping .b-paw-l { animation: b-tuck-l 2.2s ease-in-out both; }
+.periscoping .b-paw-r { animation: b-tuck-r 2.2s ease-in-out both; }
+.periscoping .b-head { animation: b-look 2.2s ease-in-out both; }
+.periscoping .b-nose { animation-duration: .25s; }
+.periscoping .b-eyes { animation: none; transform: scale(1.1); }
+@keyframes b-stand { 0%, 100% { transform: scale(1, 1); } 18%, 85% { transform: scale(.84, 1.2); } }
+@keyframes b-tuck-l { 0%, 100% { transform: translate(0, 0); } 18%, 85% { transform: translate(2px, -26px) scale(.9, .7); } }
+@keyframes b-tuck-r { 0%, 100% { transform: translate(0, 0); } 18%, 85% { transform: translate(-2px, -26px) scale(.9, .7); } }
+@keyframes b-look { 0%, 18%, 85%, 100% { transform: rotate(0); } 35% { transform: rotate(-9deg); } 65% { transform: rotate(9deg); } }
+
+/* munching: a leafy treat */
+.munching .b-treat { animation: b-treat 2.4s ease-in-out both; }
+.munching .b-head { animation: b-munch 2.4s ease-in-out both; }
+.munching .b-nose { animation-duration: .2s; }
+.munching .b-eyes { animation: none; transform: scaleY(.55); }
+.munching .b-paw-l { transform: translate(4px, -16px) scale(.9, .75); }
+.munching .b-paw-r { transform: translate(-4px, -16px) scale(.9, .75); }
+@keyframes b-treat { 0% { opacity: 0; transform: scale(1); } 10%, 55% { opacity: 1; transform: scale(1); } 85%, 100% { opacity: 0; transform: scale(.2); } }
+@keyframes b-munch {
+  0%, 100% { transform: translateY(0); }
+  10%, 30%, 50%, 70% { transform: translateY(5px); }
+  20%, 40%, 60%, 80% { transform: translateY(2px); }
+}
+
+/* jumping: a binky! */
+.jumping .b-all { animation: b-binky .55s cubic-bezier(.3, 0, .5, 1) infinite alternate; }
+.jumping .b-ear-l { animation: b-flop-l .55s ease-in-out infinite alternate; }
+.jumping .b-ear-r { animation: b-flop-r .55s ease-in-out infinite alternate; }
+.jumping .b-paw-l { transform: translate(-10px, -18px) rotate(40deg); }
+.jumping .b-paw-r { transform: translate(10px, -18px) rotate(-40deg); }
+.jumping .b-shadow { transform-origin: 50% 50%; animation: b-shadow .55s ease-in-out infinite alternate; }
+.jumping .b-mouth, .dancing .b-mouth, .held .b-mouth { d: path("M70 75 L70 77 M66 78 Q70 85 74 78 Z"); fill: #8a3f3f; }
+@keyframes b-binky { from { transform: translateY(0) scale(1.06, .93) rotate(0); } to { transform: translateY(-34px) scale(.97, 1.04) rotate(12deg); } }
+@keyframes b-shadow { from { transform: scale(1); } to { transform: scale(.6); opacity: .5; } }
+
+/* held: scooped up, ears and paws dangling */
+.held .b-shadow { opacity: 0; }
+.held .b-all { transform: scale(.94, 1.08); }
+.held .b-paw-l { animation: b-dangle .25s ease-in-out infinite alternate; }
+.held .b-paw-r { animation: b-dangle .25s ease-in-out infinite alternate-reverse; }
+.held .b-foot-l { animation: b-kick .25s ease-in-out infinite; }
+.held .b-foot-r { animation: b-kick .25s ease-in-out infinite -.12s; }
+.held .b-ear-l { animation: b-swing-l .6s ease-in-out infinite alternate; }
+.held .b-ear-r { animation: b-swing-r .6s ease-in-out infinite alternate; }
+.held .b-eyes { animation: none; transform: scale(1.16); }
+@keyframes b-dangle { from { transform: translateY(2px) rotate(-6deg); } to { transform: translateY(8px) rotate(6deg); } }
