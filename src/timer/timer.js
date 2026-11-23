@@ -76,6 +76,15 @@ function render(s) {
   $('spotConnect').textContent = s.spotify.connected ? 'Disconnect Spotify' : 'Connect Spotify';
   $('msg').textContent = s.spotify.message || '';
 
+  // which extra tabs exist depends on what is connected in settings
+  $('tabTodoist').hidden = !s.sources.todoist;
+  $('tabNotion').hidden = !s.sources.notion;
+  $('todoistOff').hidden = !s.sources.todoist;
+  $('notionOff').hidden = !s.settings.notionLink && !s.sources.notion;
+  $('todoistToken').placeholder = s.sources.todoist ? 'saved ✓  (paste a new one to replace)' : 'Todoist → Settings → Integrations → Developer';
+  $('notionToken').placeholder = s.sources.notion ? 'saved ✓  (paste a new one to replace)' : 'from notion.so/profile/integrations';
+  if (document.activeElement !== $('notionLink')) $('notionLink').value = s.settings.notionLink || '';
+  if ((tab === 'todoist' && !s.sources.todoist) || (tab === 'notion' && !s.sources.notion)) tab = 'session';
   renderTasks(s.settings.tasks || []);
   if (document.activeElement !== $('petScale')) $('petScale').value = s.settings.petScale;
 
@@ -95,8 +104,10 @@ function renderTasks(tasks) {
   if (key === tasksKey) return;
   tasksKey = key;
   const left = tasks.filter((t) => !t.done).length;
-  $('todoCount').textContent = !tasks.length ? 'To do' : left ? `To do · ${left} left` : 'To do · all done!';
-  $('clearDone').hidden = !tasks.some((t) => t.done);
+  $('tabSession').textContent = !tasks.length ? 'To do' : left ? `To do · ${left}` : 'To do · done!';
+  anyDone = tasks.some((t) => t.done);
+  sessionTexts = new Set(tasks.map((t) => t.text));
+  showTab(tab);
   const ul = $('tasks');
   ul.textContent = '';
   for (const t of tasks) {
@@ -119,6 +130,108 @@ function renderTasks(tasks) {
     ul.append(li);
   }
 }
+
+// ---------- tabs: this session's to-do list, plus read-only lists from Todoist and Notion ----------
+let tab = 'session';
+let anyDone = false;
+let sessionTexts = new Set();
+const ext = { todoist: { filter: '' }, notion: { filter: 'all' } }; // items, error, loading, at
+
+function showTab(next) {
+  tab = next;
+  const isSession = tab === 'session';
+  $('tabSession').classList.toggle('on', isSession);
+  $('tabTodoist').classList.toggle('on', tab === 'todoist');
+  $('tabNotion').classList.toggle('on', tab === 'notion');
+  $('sessionPane').hidden = !isSession;
+  $('extPane').hidden = isSession;
+  $('clearDone').hidden = !isSession || !anyDone;
+  $('extTools').hidden = isSession;
+  if (!isSession) renderExternal();
+}
+
+async function loadExternal(which, force) {
+  const src = ext[which];
+  if (src.loading) return;
+  if (!force && src.items && Date.now() - src.at < 2 * 60 * 1000) return;
+  src.loading = true;
+  src.error = '';
+  renderExternal();
+  const res = await window.api.fetchSource(which);
+  src.loading = false;
+  src.at = Date.now();
+  if (res.error) src.error = res.error;
+  else {
+    src.items = res.items;
+    // Todoist opens on "today" when something is due, otherwise on everything
+    if (which === 'todoist' && !src.filter) src.filter = res.items.some((t) => t.today) ? 'today' : 'all';
+  }
+  renderExternal();
+}
+
+function renderExternal() {
+  if (tab === 'session') return;
+  const src = ext[tab];
+  const name = tab === 'todoist' ? 'Todoist' : 'Notion';
+  const items = (src.items || []).filter((t) => src.filter !== 'today' || t.today);
+  $('extFilter').hidden = tab !== 'todoist';
+  $('extFilter').textContent = src.filter === 'today' ? 'today' : 'all';
+  $('extStatus').textContent = src.loading ? `Loading from ${name}…`
+    : src.error ? src.error
+    : !src.items ? ''
+    : !items.length ? (src.filter === 'today' ? 'Nothing due today. Click "today" to see everything.' : `No open tasks in ${name}.`)
+    : 'Click + to add one to this session.';
+  const ul = $('extTasks');
+  ul.textContent = '';
+  for (const t of items) {
+    const li = document.createElement('li');
+    const added = sessionTexts.has(t.text);
+    const add = document.createElement('button');
+    add.className = 'add';
+    add.textContent = added ? '✓' : '+';
+    add.disabled = added;
+    add.title = added ? 'Already in your to-do list' : 'Add to this session';
+    add.setAttribute('aria-label', `${added ? 'Already added' : 'Add'}: ${t.text}`);
+    add.onclick = () => window.api.addTask(t.text);
+    const text = document.createElement('span');
+    text.className = 'text';
+    text.textContent = t.text;
+    li.append(add, text);
+    if (t.label) {
+      const tag = document.createElement('span');
+      tag.className = `tag ${t.label === 'overdue' ? 'late' : ''}`;
+      tag.textContent = t.label;
+      li.append(tag);
+    }
+    ul.append(li);
+  }
+}
+
+$('tabSession').onclick = () => showTab('session');
+$('tabTodoist').onclick = () => { showTab('todoist'); loadExternal('todoist'); };
+$('tabNotion').onclick = () => { showTab('notion'); loadExternal('notion'); };
+$('extRefresh').onclick = () => loadExternal(tab, true);
+$('extFilter').onclick = () => {
+  ext.todoist.filter = ext.todoist.filter === 'today' ? 'all' : 'today';
+  renderExternal();
+};
+
+// settings for those lists: tokens are sent to the main process and never shown again
+for (const id of ['todoistToken', 'notionToken']) {
+  $(id).addEventListener('change', (e) => {
+    const value = e.target.value.trim();
+    if (!value) return;
+    window.api.updateSettings({ [id]: value });
+    e.target.value = '';
+    ext[id === 'todoistToken' ? 'todoist' : 'notion'].items = null;
+  });
+}
+$('notionLink').addEventListener('change', (e) => {
+  window.api.updateSettings({ notionLink: e.target.value });
+  ext.notion.items = null;
+});
+$('todoistOff').onclick = (e) => { e.preventDefault(); window.api.updateSettings({ todoistToken: '' }); ext.todoist.items = null; };
+$('notionOff').onclick = (e) => { e.preventDefault(); window.api.updateSettings({ notionToken: '' }); ext.notion.items = null; };
 
 function showSettings(show) {
   $('settings').hidden = !show;

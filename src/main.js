@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Notification, screen, shell, safeStorage } 
 const path = require('path');
 const fs = require('fs');
 const spotify = require('./spotify');
+const taskSources = require('./task-sources');
 
 const DEFAULTS = {
   focusMin: 25,
@@ -18,6 +19,9 @@ const DEFAULTS = {
   spotifyClientId: '',
   spotifyPlaylist: '',
   spotifyRefresh: '',
+  todoistToken: '', // kept encrypted, never sent to the window
+  notionToken: '',  // kept encrypted, never sent to the window
+  notionLink: '',
   tasks: [], // { id, text, done }
 };
 const DURATION_KEY = { focus: 'focusMin', short: 'shortMin', long: 'longMin' };
@@ -85,12 +89,30 @@ function setPhase(phase) {
   if (state.running) endAt = Date.now() + state.remainingMs;
 }
 
+// Secrets (API tokens) are stored encrypted with the OS keychain when possible.
+function readSecret(key) {
+  const raw = settings[key];
+  if (!raw) return '';
+  if (raw.startsWith('enc:')) {
+    try { return safeStorage.decryptString(Buffer.from(raw.slice(4), 'base64')); } catch { return ''; }
+  }
+  return raw;
+}
+
+function writeSecret(key, value) {
+  const clean = String(value || '').trim();
+  settings[key] = clean && safeStorage.isEncryptionAvailable()
+    ? 'enc:' + safeStorage.encryptString(clean).toString('base64')
+    : clean;
+}
+
 function publicState() {
-  const { spotifyRefresh, ...safeSettings } = settings;
+  const { spotifyRefresh, todoistToken, notionToken, ...safeSettings } = settings;
   return {
     ...state,
     settings: safeSettings,
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
+    sources: { todoist: Boolean(todoistToken), notion: Boolean(notionToken && settings.notionLink) },
     maximized: Boolean(restoreBounds),
     update,
     updateStatus,
@@ -279,6 +301,9 @@ function registerIpc() {
       spotify.resetContext();
     }
     if ('spotifyClientId' in patch) settings.spotifyClientId = String(patch.spotifyClientId || '').trim();
+    if ('todoistToken' in patch) writeSecret('todoistToken', patch.todoistToken);
+    if ('notionToken' in patch) writeSecret('notionToken', patch.notionToken);
+    if ('notionLink' in patch) settings.notionLink = String(patch.notionLink || '').trim().slice(0, 400);
     saveSettings();
     if (untouched) setPhase(state.phase);
     syncPetWindow();
@@ -306,6 +331,17 @@ function registerIpc() {
     settings.tasks = settings.tasks.filter((t) => t.id !== id);
     tasksChanged();
   });
+  // read-only task lists from other apps, shown as extra tabs next to the to-do list
+  ipcMain.handle('sources:fetch', async (_e, which) => {
+    try {
+      if (which === 'todoist') return { items: await taskSources.fetchTodoist(readSecret('todoistToken')) };
+      if (which === 'notion') return { items: await taskSources.fetchNotion(readSecret('notionToken'), settings.notionLink) };
+      return { error: 'Unknown list' };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
   ipcMain.on('tasks:clearDone', () => {
     settings.tasks = settings.tasks.filter((t) => !t.done);
     tasksChanged();

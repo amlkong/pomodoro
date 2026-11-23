@@ -62,11 +62,25 @@
 
     <div class="todo">
       <div class="todo-head">
-        <span id="todoCount">To do</span>
+        <span class="todo-tabs" role="tablist">
+          <button id="tabSession" role="tab" class="on">To do</button>
+          <button id="tabTodoist" role="tab" hidden>Todoist</button>
+          <button id="tabNotion" role="tab" hidden>Notion</button>
+        </span>
         <button id="clearDone" hidden>clear done</button>
+        <span id="extTools" hidden>
+          <button id="extFilter" title="Show only what's due today, or everything"></button>
+          <button id="extRefresh" title="Refresh" aria-label="Refresh">↻</button>
+        </span>
       </div>
-      <input type="text" id="newTask" placeholder="Add a task and press Enter" maxlength="140" spellcheck="false">
-      <ul id="tasks"></ul>
+      <div id="sessionPane">
+        <input type="text" id="newTask" placeholder="Add a task and press Enter" maxlength="140" spellcheck="false">
+        <ul id="tasks"></ul>
+      </div>
+      <div id="extPane" hidden>
+        <div class="status" id="extStatus"></div>
+        <ul id="extTasks"></ul>
+      </div>
     </div>
   </main>
 
@@ -89,6 +103,16 @@
       <input type="text" id="spotifyPlaylist" placeholder="https://open.spotify.com/playlist/..." spellcheck="false">
     </label>
     <button class="wide" id="spotConnect">Connect Spotify</button>
+    <h3>Task lists</h3>
+    <label class="col">Todoist API token <button class="link" id="todoistOff" type="button" hidden>disconnect</button>
+      <input type="password" id="todoistToken" placeholder="Todoist → Settings → Integrations → Developer" spellcheck="false" autocomplete="off">
+    </label>
+    <label class="col">Notion integration secret <button class="link" id="notionOff" type="button" hidden>disconnect</button>
+      <input type="password" id="notionToken" placeholder="from notion.so/profile/integrations" spellcheck="false" autocomplete="off">
+    </label>
+    <label class="col">Notion page or database link
+      <input type="text" id="notionLink" placeholder="https://www.notion.so/..." spellcheck="false">
+    </label>
     <h3>About</h3>
     <div class="row"><span id="verLong">Pomo</span> <button class="link" id="checkUpdates">Check for updates</button></div>
     <div class="status" id="updateStatus"></div>

@@ -16,6 +16,7 @@ A cute pomodoro timer for Windows and Mac. A little animated buddy keeps you com
 - [Getting a newer version](#getting-a-newer-version)
 - [Using Pomo](#using-pomo)
 - [Set up Spotify](#set-up-spotify-optional)
+- [Connect Todoist and Notion](#connect-todoist-and-notion-optional)
 - [Always-latest mode](#always-latest-mode-optional)
 - [If something isn't working](#if-something-isnt-working)
 - [For tinkering](#for-tinkering)
@@ -115,6 +116,39 @@ Breaks pause the music. The **🎧 Spotify** button on the main screen does the 
 
 For the closed-Spotify case, paste a playlist link in ⚙ (step 7). A freshly opened Spotify has nothing queued, so Pomo needs to know what to play. If you'd like music during breaks too, turn on **Keep music on during breaks** in ⚙.
 
+## Connect Todoist and Notion (optional)
+
+If you keep your tasks in Todoist or Notion, Pomo can show them in a tab next to the to-do list. You look through them there and click **+** on the ones you want to work on this session, which copies them into your Pomo to-do list.
+
+It is read-only. Pomo never changes, completes or deletes anything in Todoist or Notion, and ticking a task off in Pomo doesn't touch the original.
+
+### Todoist
+
+1. In Todoist, open **Settings → Integrations → Developer**.
+2. Copy your **API token**.
+3. In Pomo, click **⚙** and paste it into **Todoist API token**.
+
+A **Todoist** tab appears next to **To do**. It opens on what's overdue and due today. Click **today** to switch to all your open tasks, and **↻** to refresh.
+
+### Notion
+
+1. Go to [notion.so/profile/integrations](https://www.notion.so/profile/integrations) and click **New integration**. Name it "Pomo", pick your workspace, and save. Read access is all it needs.
+2. Copy the **Internal Integration Secret**.
+3. In Notion, open the page or database that holds your tasks. Click **•••** at the top right → **Connections** → add your "Pomo" integration. Notion only lets an integration see pages you've shared with it this way.
+4. Copy the link to that page (**Share → Copy link**).
+5. In Pomo, click **⚙**, paste the secret into **Notion integration secret** and the link into **Notion page or database link**.
+
+A **Notion** tab appears. It works with either kind of page:
+
+- a **database** (a table or board of tasks): each row is a task, and rows that are checked off or have a status like Done are left out
+- a **regular page** with to-do checkboxes: each unchecked box is a task
+
+### Good to know
+
+- Your tokens are saved on your computer only, encrypted by Windows or macOS, and are never shown again after you paste them. Click **disconnect** next to a field to remove one.
+- A task you've already added shows a ✓ instead of a +.
+- Lists refresh when you open the tab, at most every two minutes. Click **↻** to refresh right away.
+
 ## Always-latest mode (optional)
 
 On Windows the installed app already updates itself, so most people can skip this. It's here for Mac, or for running straight from the code. You keep a copy of the code on your computer and open Pomo with a launcher that fetches the newest version every time it starts.
@@ -150,6 +184,8 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 **Windows says "Windows protected your PC".** Click **More info** → **Run anyway**.
 
 **Mac says the app can't be opened.** Right-click → **Open**, or System Settings → Privacy & Security → **Open Anyway**.
+
+**The Todoist or Notion tab shows an error.** The message says what's wrong. "Didn't accept that token" means the token was copied incompletely, so paste it again. "Notion can't see that page" means the page hasn't been shared with your integration yet (step 3 of the Notion setup).
 
 **Spotify says it couldn't find Spotify.** Pomo tried to open the Spotify desktop app and it didn't appear within about 25 seconds. Check that the Spotify app is installed and that you're logged in to it, then press Start or the 🎧 button again.
 
@@ -198,6 +234,7 @@ To add one, copy `cat.js` and `cat.css`, change the drawing and animations, then
 ```
 src/main.js          timer logic, windows, to-do storage, music control
 src/spotify.js       Spotify login and play/pause
+src/task-sources.js  read-only task lists from Todoist and Notion
 src/characters/      one .js and one .css per character
 src/pet/             how a character behaves (shared by the screen overlay and the timer window)
 src/timer/           the timer window
