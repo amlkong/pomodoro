@@ -68,14 +68,6 @@
           <button id="tabCalendar" role="tab">Calendar</button>
         </span>
         <button id="clearDone" hidden>clear done</button>
-        <span id="extTools" hidden>
-          <select id="taskApp" title="Which app your tasks come from" aria-label="Task app">
-            <option value="todoist">Todoist</option>
-            <option value="notion">Notion</option>
-          </select>
-          <button id="extFilter" title="Switch between today and everything"></button>
-          <button id="extRefresh" title="Refresh" aria-label="Refresh">↻</button>
-        </span>
       </div>
       <div id="sessionPane">
         <input type="text" id="newTask" placeholder="Add a task and press Enter" maxlength="140" spellcheck="false">
@@ -83,7 +75,17 @@
         <div class="status" id="syncMsg"></div>
       </div>
       <div id="extPane" hidden>
-        <div class="status" id="extStatus"></div>
+        <div class="ext-bar">
+          <div class="status" id="extStatus"></div>
+          <span id="extTools">
+            <select id="taskApp" title="Which app your tasks come from" aria-label="Task app">
+            <option value="todoist">Todoist</option>
+            <option value="notion">Notion</option>
+            </select>
+            <button id="extFilter" title="Switch between today and everything"></button>
+            <button id="extRefresh" title="Refresh" aria-label="Refresh">↻</button>
+            </span>
+        </div>
         <ul id="extTasks"></ul>
       </div>
     </div>

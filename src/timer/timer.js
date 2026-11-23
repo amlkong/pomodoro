@@ -170,7 +170,6 @@ function showTab(next) {
   $('sessionPane').hidden = !isSession;
   $('extPane').hidden = isSession;
   $('clearDone').hidden = !isSession || !anyDone;
-  $('extTools').hidden = isSession;
   $('taskApp').hidden = tab !== 'tasks';
   if (!isSession) renderExternal();
 }
@@ -206,7 +205,7 @@ function renderExternal() {
     : src.error ? src.error
     : !src.items ? ''
     : !items.length ? (src.filter === 'today' ? info.noneToday : info.none)
-    : 'Click + to add one to this session.';
+    : 'Click + to add one to your session.';
   const ul = $('extTasks');
   ul.textContent = '';
   for (const t of items) {

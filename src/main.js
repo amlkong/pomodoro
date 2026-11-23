@@ -201,7 +201,7 @@ function startSpotify() {
 // The timer window grows a little floor for Pomo when he lives inside it.
 const TIMER_W = 340;
 function timerHeight() {
-  const want = settings.showPet && settings.petRoam === 'window' ? 665 + Math.round(85 * settings.petScale) : 665;
+  const want = settings.showPet && settings.petRoam === 'window' ? 760 + Math.round(85 * settings.petScale) : 760;
   return Math.min(want, screen.getPrimaryDisplay().workArea.height);
 }
 
