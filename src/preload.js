@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   removeTask: send('tasks:remove'),
   clearDoneTasks: send('tasks:clearDone'),
   fetchSource: (which) => ipcRenderer.invoke('sources:fetch', which),
+  openSource: send('sources:open'),
   completeSource: (which, id) => ipcRenderer.invoke('sources:complete', which, id),
   petHover: send('pet:hover'),
   minimize: send('win:minimize'),

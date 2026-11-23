@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask } = require('../src/task-sources');
+const { setRetryDelay, fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask } = require('../src/task-sources');
+setRetryDelay(1); // don't actually wait between retries in tests
 
 const reply = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
 const day = (offset) => {
@@ -65,6 +66,37 @@ test('Todoist: a task that is gone, a bad token and no token each get a clear me
   global.fetch = async () => reply(401, {});
   await assert.rejects(setTodoistDone('bad', '1', true), /didn't accept that token/);
   await assert.rejects(setTodoistDone('', '1', true), /isn't connected yet/);
+});
+
+test('Todoist: a passing server error is retried and the list still loads', async () => {
+  let tries = 0;
+  global.fetch = async () => (++tries < 3 ? reply(500, {}) : reply(200, { results: [{ id: '1', content: 'Made it' }], next_cursor: null }));
+  assert.deepStrictEqual((await fetchTodoist('t')).map((x) => x.text), ['Made it']);
+  assert.strictEqual(tries, 3);
+});
+
+test('Todoist: a dropped connection is retried too', async () => {
+  let tries = 0;
+  global.fetch = async () => { if (++tries < 2) throw new Error('reset'); return reply(200, { results: [], next_cursor: null }); };
+  assert.deepStrictEqual(await fetchTodoist('t'), []);
+  assert.strictEqual(tries, 2);
+});
+
+test('Todoist: a server error that will not clear says it is on their side, after three tries', async () => {
+  let tries = 0;
+  global.fetch = async () => { tries++; return reply(500, {}); };
+  await assert.rejects(fetchTodoist('t'), /trouble on its side.*500/);
+  assert.strictEqual(tries, 3);
+  tries = 0;
+  await assert.rejects(setTodoistDone('t', '1', true), /trouble on its side.*500/);
+  assert.strictEqual(tries, 3);
+});
+
+test('Todoist: a wrong token is not retried', async () => {
+  let tries = 0;
+  global.fetch = async () => { tries++; return reply(401, {}); };
+  await assert.rejects(fetchTodoist('bad'), /didn't accept that token/);
+  assert.strictEqual(tries, 1);
 });
 
 // ---------- Notion ----------

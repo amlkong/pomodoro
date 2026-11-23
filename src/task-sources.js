@@ -8,16 +8,36 @@ const NOTION_OLD = '2022-06-28'; // works for ordinary single-source databases
 const NOTION_NEW = '2025-09-03'; // needed for databases with several data sources
 const MAX_ITEMS = 300;
 
+let retryMs = 800;
+const setRetryDelay = (ms) => { retryMs = ms; }; // tests use this so they don't wait
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// One request. A dropped connection or a "the server tripped over" answer
+// (500, 502, 503, 504) or "slow down" (429) is tried again a couple of times
+// before giving up, since those usually clear up by themselves within seconds.
 async function getJson(url, init, service) {
-  let res;
-  try {
-    res = await fetch(url, init);
-  } catch {
-    throw new Error(`Couldn't reach ${service}. Check your internet connection`);
+  let last;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await sleep(retryMs * attempt);
+    let res;
+    try {
+      res = await fetch(url, init);
+    } catch {
+      last = null;
+      continue;
+    }
+    const data = await res.json().catch(() => ({}));
+    last = { status: res.status, ok: res.ok, data };
+    if (res.status < 500 && res.status !== 429) return last;
   }
-  const data = await res.json().catch(() => ({}));
-  return { status: res.status, ok: res.ok, data };
+  if (!last) throw new Error(`Couldn't reach ${service}. Check your internet connection`);
+  return last;
 }
+
+// What to say when the other service itself is having a bad moment.
+const serverTrouble = (service, status) => (status === 429
+  ? `${service} asked Pomo to slow down. Wait a minute, then press ↻`
+  : `${service} is having trouble on its side right now (error ${status}). Wait a minute, then press ↻`);
 
 // ---------- Todoist ----------
 
@@ -43,6 +63,7 @@ async function fetchTodoist(token) {
     const url = `${TODOIST_URL}?limit=200${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
     const r = await getJson(url, { headers }, 'Todoist');
     if (r.status === 401 || r.status === 403) throw new Error('Todoist didn\'t accept that token. Copy it again from Todoist settings');
+    if (r.status >= 500 || r.status === 429) throw new Error(serverTrouble('Todoist', r.status));
     if (!r.ok) throw new Error(`Todoist answered with an error (${r.status})`);
     const list = Array.isArray(r.data) ? r.data : (r.data.results || []);
     tasks.push(...list);
@@ -72,6 +93,7 @@ async function setTodoistDone(token, id, done) {
   if (r.ok) return;
   if (r.status === 401 || r.status === 403) throw new Error('Todoist didn\'t accept that token. Copy it again from Todoist settings');
   if (r.status === 404) throw new Error('Todoist couldn\'t find that task. It may have been deleted or finished already');
+  if (r.status >= 500 || r.status === 429) throw new Error(serverTrouble('Todoist', r.status));
   throw new Error(`Todoist couldn't ${done ? 'complete' : 'reopen'} that task (${r.status})`);
 }
 
@@ -116,6 +138,7 @@ async function notionRequest(token, method, path, version, body) {
 function notionFail(r) {
   if (r.status === 401) return new Error('Notion didn\'t accept that token. Copy the integration secret again');
   if (r.status === 404) return new Error('Notion can\'t see that page. Open it in Notion, click ••• → Connections, and add your integration');
+  if (r.status >= 500 || r.status === 429) return new Error(serverTrouble('Notion', r.status));
   return new Error((r.data && r.data.message) ? `Notion: ${String(r.data.message).slice(0, 120)}` : `Notion answered with an error (${r.status})`);
 }
 
@@ -187,4 +210,4 @@ async function fetchNotion(token, link) {
   return (await notionPageTodos(token, id)).slice(0, MAX_ITEMS);
 }
 
-module.exports = { fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask, todoistLabel };
+module.exports = { setRetryDelay, fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask, todoistLabel };

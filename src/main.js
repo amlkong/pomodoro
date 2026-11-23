@@ -356,6 +356,21 @@ function registerIpc() {
   });
 
   // Completing straight from the Todoist list, without adding it to the session first.
+  // Opens the real app in the browser. The address is chosen here, never by the window.
+  ipcMain.on('sources:open', (_e, which) => {
+    let url = '';
+    if (which === 'todoist') url = 'https://app.todoist.com/app/today';
+    else if (which === 'calendar') url = 'https://calendar.google.com/';
+    else if (which === 'notion') {
+      url = 'https://www.notion.so/';
+      try {
+        const link = new URL(settings.notionLink);
+        if (link.protocol === 'https:' && /(^|\.)notion\.(so|site)$/.test(link.hostname)) url = link.toString();
+      } catch { /* no link saved: open Notion's home page */ }
+    }
+    if (url) shell.openExternal(url);
+  });
+
   ipcMain.handle('sources:complete', async (_e, which, sourceId) => {
     if (which !== 'todoist') return { error: 'Only Todoist tasks can be completed from here' };
     if (!settings.todoistSync) return { error: 'Turn on "also complete it in Todoist" in ⚙ first' };

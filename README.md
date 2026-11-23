@@ -178,6 +178,7 @@ The same box accepts the private iCal link from Outlook or iCloud calendars too.
 - Your tokens and calendar link are saved on your computer only, encrypted by Windows or macOS, and are never shown again after you paste them. Click **disconnect** next to a field to remove one.
 - A task you've already added shows a ✓ instead of a +.
 - Lists refresh when you open the tab, at most every two minutes. Click **↻** to refresh right away.
+- **↗** opens Todoist, your Notion page or Google Calendar in your browser.
 
 ## Always-latest mode (optional)
 
@@ -214,6 +215,8 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 **Windows says "Windows protected your PC".** Click **More info** → **Run anyway**.
 
 **Mac says the app can't be opened.** Right-click → **Open**, or System Settings → Privacy & Security → **Open Anyway**.
+
+**The Tasks tab says Todoist or Notion "is having trouble on its side" (error 500 or similar).** That's their server failing, not your setup, and the Todoist or Notion app doesn't need to be open for Pomo to work. Pomo already retried a few times before showing it. Wait a minute and press **↻**. The **↗** button next to it opens the real app in your browser, which is a quick way to see whether it's down for everyone.
 
 **The Tasks or Calendar tab shows an error.** The message says what's wrong. "The calendar link was refused" means the link is incomplete or was reset, so copy the Secret address in iCal format again. "Didn't accept that token" means the token was copied incompletely, so paste it again. "Notion can't see that page" means the page hasn't been shared with your integration yet (step 3 of the Notion setup).
 

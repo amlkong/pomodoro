@@ -156,9 +156,9 @@ let anyDone = false;
 let sessionTexts = new Set();
 const ext = { todoist: { filter: '' }, notion: { filter: 'all' }, calendar: { filter: 'today' } }; // items, error, loading, at
 const EXT = {
-  todoist: { name: 'Todoist', filters: true, all: 'all', none: 'No open tasks in Todoist.', noneToday: 'Nothing due today. Click "today" to see everything.' },
-  notion: { name: 'Notion', filters: false, all: 'all', none: 'No open tasks in Notion.', noneToday: '' },
-  calendar: { name: 'your calendar', filters: true, all: 'week', none: 'Nothing on your calendar this week.', noneToday: 'Nothing on your calendar today. Click "today" to see the week.' },
+  todoist: { name: 'Todoist', open: 'Todoist', filters: true, all: 'all', none: 'No open tasks in Todoist.', noneToday: 'Nothing due today. Click "today" to see everything.' },
+  notion: { name: 'Notion', open: 'your Notion page', filters: false, all: 'all', none: 'No open tasks in Notion.', noneToday: '' },
+  calendar: { name: 'your calendar', open: 'Google Calendar', filters: true, all: 'week', none: 'Nothing on your calendar this week.', noneToday: 'Nothing on your calendar today. Click "today" to see the week.' },
 };
 
 function showTab(next) {
@@ -199,6 +199,7 @@ function renderExternal() {
   const info = EXT[sourceOf(tab)];
   const name = info.name;
   const items = (src.items || []).filter((t) => src.filter !== 'today' || t.today);
+  $('extOpen').title = `Open ${info.open}`;
   $('extFilter').hidden = !info.filters;
   $('extFilter').textContent = src.filter === 'today' ? 'today' : info.all;
   $('extStatus').textContent = src.loading ? `Loading from ${name}…`
@@ -262,6 +263,7 @@ $('taskApp').onchange = (e) => chooseTaskApp(e.target.value);
 $('taskAppSetting').onchange = (e) => chooseTaskApp(e.target.value);
 $('tabCalendar').onclick = () => { showTab('calendar'); loadExternal('calendar'); };
 $('extRefresh').onclick = () => loadExternal(sourceOf(tab), true);
+$('extOpen').onclick = () => { if (tab !== 'session') window.api.openSource(sourceOf(tab)); };
 $('extFilter').onclick = () => {
   if (tab === 'session') return;
   const src = ext[sourceOf(tab)];
