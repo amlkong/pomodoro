@@ -99,7 +99,9 @@ function disconnect() {
   contextSent = false;
 }
 
-async function api(method, path, body) {
+// One call to the Spotify Web API. Returns { status, data } and never throws
+// for an HTTP error, so callers can decide what a 404 or 403 means for them.
+async function request(method, path, body) {
   if (!isConnected()) throw new Error('Not connected to Spotify');
   if (!accessToken || Date.now() > expiresAt) {
     await tokenRequest({ grant_type: 'refresh_token', refresh_token: refreshToken });
@@ -109,14 +111,16 @@ async function api(method, path, body) {
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.ok) return;
-  const data = await res.json().catch(() => ({}));
-  const reason = data.error && data.error.reason;
-  if (res.status === 404 || reason === 'NO_ACTIVE_DEVICE') throw new Error('Open Spotify and play something once so Pomo can find it');
-  if (reason === 'PREMIUM_REQUIRED') throw new Error('Spotify only allows remote control on Premium accounts');
-  // 403 with no reason usually means "already playing" or "already paused", which is fine.
-  if (res.status === 403) return;
-  throw new Error((data.error && data.error.message) || `Spotify error ${res.status}`);
+  const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+  return { status: res.status, ok: res.ok, data };
+}
+
+const reasonOf = (r) => (r.data && r.data.error && r.data.error.reason) || '';
+const noDevice = (r) => r.status === 404 || reasonOf(r) === 'NO_ACTIVE_DEVICE';
+
+function fail(r) {
+  if (reasonOf(r) === 'PREMIUM_REQUIRED') return new Error('Spotify only allows remote control on Premium accounts');
+  return new Error((r.data && r.data.error && r.data.error.message) || `Spotify error ${r.status}`);
 }
 
 // Turns a pasted playlist or album link into a spotify: URI.
@@ -128,18 +132,83 @@ function toUri(link) {
   return m ? `spotify:${m[1]}:${m[2]}` : '';
 }
 
-async function play(playlistLink) {
-  const uri = toUri(playlistLink);
-  // Only start the playlist the first time. After that just resume where it left off.
-  if (uri && !contextSent) {
-    await api('PUT', '/me/player/play', { context_uri: uri });
-    contextSent = true;
-  } else {
-    await api('PUT', '/me/player/play');
-  }
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Every Spotify app the account can play on right now (computer, phone, speaker).
+async function listDevices() {
+  const r = await request('GET', '/me/player/devices');
+  if (!r.ok) throw fail(r);
+  return (r.data.devices || []).filter((d) => d.id && !d.is_restricted);
 }
 
-const pause = () => api('PUT', '/me/player/pause');
+// Prefer whatever is already active, then this computer, then anything else.
+const pickDevice = (devices) => devices.find((d) => d.is_active)
+  || devices.find((d) => d.type === 'Computer')
+  || devices[0]
+  || null;
+
+// Finds a Spotify app to play on. If none is open, asks for the desktop app to
+// be opened and waits for it to show up.
+async function findDevice({ openApp, onStatus, waitMs = 25000, pollMs = 1500 } = {}) {
+  let device = pickDevice(await listDevices());
+  if (device) return device;
+  if (!openApp) return null;
+  if (onStatus) onStatus('Opening Spotify…');
+  await openApp();
+  const deadline = Date.now() + waitMs;
+  while (Date.now() < deadline) {
+    await sleep(pollMs);
+    device = pickDevice(await listDevices());
+    if (device) return device;
+  }
+  return null;
+}
+
+// Starts the music. If Spotify isn't the active player (or isn't open at all),
+// this wakes it up first, so there is no need to press play there beforehand.
+async function play(playlistLink, opts = {}) {
+  const uri = toUri(playlistLink);
+  const wantsContext = Boolean(uri && !contextSent);
+  // Only start the playlist the first time. After that just resume where it left off.
+  let r = await request('PUT', '/me/player/play', wantsContext ? { context_uri: uri } : undefined);
+
+  if (noDevice(r)) {
+    const device = await findDevice(opts);
+    if (!device) throw new Error('Couldn\'t find Spotify. Open the Spotify app once, then try again');
+    if (opts.onStatus) opts.onStatus('Starting your music…');
+    const target = `?device_id=${encodeURIComponent(device.id)}`;
+    if (uri) {
+      // a freshly opened app has nothing queued, so always hand it the playlist
+      r = await request('PUT', `/me/player/play${target}`, { context_uri: uri });
+    } else {
+      // no playlist chosen: pick up whatever was playing last, on that device
+      r = await request('PUT', '/me/player', { device_ids: [device.id], play: true });
+      if (r.ok || r.status === 403) r = await request('PUT', `/me/player/play${target}`);
+    }
+    // a just-launched app can take a moment before it accepts commands
+    for (let i = 0; i < 3 && (noDevice(r) || r.status === 502 || r.status === 503); i++) {
+      await sleep(opts.pollMs || 1500);
+      r = await request('PUT', `/me/player/play${target}`, uri ? { context_uri: uri } : undefined);
+    }
+    if (noDevice(r)) {
+      throw new Error(uri
+        ? 'Spotify opened but didn\'t start. Press play there once, then try again'
+        : 'Spotify has nothing queued. Paste a playlist link in settings so Pomo knows what to play');
+    }
+  }
+
+  // 403 with no reason usually means "already playing", which is fine.
+  if (!r.ok && !(r.status === 403 && reasonOf(r) !== 'PREMIUM_REQUIRED')) throw fail(r);
+  if (uri) contextSent = true;
+}
+
+async function pause() {
+  const r = await request('PUT', '/me/player/pause');
+  // nothing playing, or already paused: both are exactly what was wanted
+  if (r.ok || noDevice(r) || (r.status === 403 && reasonOf(r) !== 'PREMIUM_REQUIRED')) return;
+  throw fail(r);
+}
+
 const resetContext = () => { contextSent = false; };
 
-module.exports = { init, isConnected, connect, disconnect, play, pause, resetContext, toUri, REDIRECT };
+module.exports = { init, isConnected, connect, disconnect, play, pause, resetContext, toUri, listDevices, pickDevice, REDIRECT };

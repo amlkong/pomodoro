@@ -7,7 +7,8 @@
     "start": "electron .",
     "dist": "electron-builder --publish never",
     "dist:mac": "electron-builder --mac --publish never",
-    "dist:win": "electron-builder --win --publish never"
+    "dist:win": "electron-builder --win --publish never",
+    "test": "node --test"
   },
   "license": "MIT",
   "devDependencies": {

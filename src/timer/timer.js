@@ -72,6 +72,7 @@ function render(s) {
   dots.title = `${s.completed} focus round${s.completed === 1 ? '' : 's'} today`;
 
   $('spot').classList.toggle('on', s.spotify.connected);
+  $('spot').title = s.spotify.connected ? 'Open Spotify and start the music now' : 'Set up Spotify';
   $('spotConnect').textContent = s.spotify.connected ? 'Disconnect Spotify' : 'Connect Spotify';
   $('msg').textContent = s.spotify.message || '';
 
@@ -209,7 +210,7 @@ $('close').onclick = () => window.api.close();
 $('gear').onclick = () => showSettings($('settings').hidden);
 $('done').onclick = () => showSettings(false);
 $('spot').onclick = () => {
-  if (current && current.spotify.connected) $('msg').textContent = 'Spotify is connected. It plays when you focus.';
+  if (current && current.spotify.connected) window.api.spotifyPlayNow();
   else showSettings(true);
 };
 $('spotConnect').onclick = () => {

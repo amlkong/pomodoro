@@ -105,7 +105,15 @@ Pomo works like a remote control for the Spotify app you already have open: it p
 7. Optional: paste a link to a focus playlist in the box below it (in Spotify: Share → Copy link to playlist). Pomo starts that playlist on your first focus round. Searching Spotify for "deep focus" or "binaural beats focus" turns up good ones.
 8. Click **Connect Spotify**, then log in and click **Agree** on the page that opens in your browser.
 
-Day to day: keep the Spotify app open on your computer or phone. Start a focus round and the music plays; breaks pause it. If you'd like music during breaks too, turn on **Keep music on during breaks** in ⚙.
+Day to day, you don't need to touch Spotify first. Press **Start** on a focus round and Pomo takes care of it:
+
+- If Spotify is already playing, it carries on.
+- If Spotify is open but idle, Pomo wakes it up and starts the music. No need to press play there first.
+- If Spotify is closed, Pomo opens the Spotify app, waits for it, and starts your playlist. This takes a few seconds, and the line under the buttons says **Opening Spotify…** while it happens.
+
+Breaks pause the music. The **🎧 Spotify** button on the main screen does the same thing on demand: it opens Spotify and starts the music right away, without starting the timer.
+
+For the closed-Spotify case, paste a playlist link in ⚙ (step 7). A freshly opened Spotify has nothing queued, so Pomo needs to know what to play. If you'd like music during breaks too, turn on **Keep music on during breaks** in ⚙.
 
 ## Always-latest mode (optional)
 
@@ -143,7 +151,9 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 
 **Mac says the app can't be opened.** Right-click → **Open**, or System Settings → Privacy & Security → **Open Anyway**.
 
-**Spotify says "Open Spotify and play something once".** Spotify needs an active device. Play any song for a second in the Spotify app, then start your focus round again.
+**Spotify says it couldn't find Spotify.** Pomo tried to open the Spotify desktop app and it didn't appear within about 25 seconds. Check that the Spotify app is installed and that you're logged in to it, then press Start or the 🎧 button again.
+
+**Spotify opened but nothing played.** Paste a playlist link in ⚙ so Pomo knows what to start. Without one it can only resume whatever was playing last.
 
 **Spotify connect fails with a redirect error.** The Redirect URI in the Spotify dashboard has to match exactly: `http://127.0.0.1:8888/callback`
 
@@ -158,6 +168,12 @@ Run it from the code:
 ```bash
 npm install
 npm start
+```
+
+Run the tests:
+
+```bash
+npm test
 ```
 
 Build an installer for the computer you're on (lands in `dist/`):

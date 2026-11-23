@@ -157,8 +157,16 @@ function syncMusic() {
   if (want === lastWantMusic) return;
   lastWantMusic = want;
   if (!spotify.isConnected()) return;
-  const job = want ? spotify.play(settings.spotifyPlaylist) : spotify.pause();
+  const job = want ? startSpotify() : spotify.pause();
   job.then(() => { spotifyMsg = ''; }, (e) => { spotifyMsg = e.message; }).finally(broadcast);
+}
+
+// Plays on Spotify, opening the desktop app first if it isn't running.
+function startSpotify() {
+  return spotify.play(settings.spotifyPlaylist, {
+    openApp: () => shell.openExternal('spotify:').catch(() => {}),
+    onStatus: (text) => { spotifyMsg = text; broadcast(); },
+  });
 }
 
 // ---------- windows ----------
@@ -320,6 +328,13 @@ function registerIpc() {
       spotifyMsg = e.code === 'EADDRINUSE' ? 'Port 8888 is busy, close whatever is using it and try again' : e.message;
     }
     broadcast();
+  });
+
+  // the Spotify button on the main screen: open Spotify and start the music now
+  ipcMain.on('spotify:playNow', () => {
+    if (!spotify.isConnected()) return;
+    lastWantMusic = true;
+    startSpotify().then(() => { spotifyMsg = ''; }, (e) => { spotifyMsg = e.message; }).finally(broadcast);
   });
 
   ipcMain.on('spotify:disconnect', () => {

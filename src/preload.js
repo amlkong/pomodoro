@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('api', {
   updateSettings: send('settings:update'),
   spotifyConnect: send('spotify:connect'),
   spotifyDisconnect: send('spotify:disconnect'),
+  spotifyPlayNow: send('spotify:playNow'),
   addTask: send('tasks:add'),
   toggleTask: send('tasks:toggle'),
   removeTask: send('tasks:remove'),
