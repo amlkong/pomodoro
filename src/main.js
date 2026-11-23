@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const spotify = require('./spotify');
 const taskSources = require('./task-sources');
+const calendarSource = require('./calendar-source');
 
 const DEFAULTS = {
   focusMin: 25,
@@ -22,6 +23,7 @@ const DEFAULTS = {
   todoistToken: '', // kept encrypted, never sent to the window
   notionToken: '',  // kept encrypted, never sent to the window
   notionLink: '',
+  calendarLink: '', // a private link, so kept encrypted like the tokens
   tasks: [], // { id, text, done }
 };
 const DURATION_KEY = { focus: 'focusMin', short: 'shortMin', long: 'longMin' };
@@ -107,12 +109,12 @@ function writeSecret(key, value) {
 }
 
 function publicState() {
-  const { spotifyRefresh, todoistToken, notionToken, ...safeSettings } = settings;
+  const { spotifyRefresh, todoistToken, notionToken, calendarLink, ...safeSettings } = settings;
   return {
     ...state,
     settings: safeSettings,
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
-    sources: { todoist: Boolean(todoistToken), notion: Boolean(notionToken && settings.notionLink) },
+    sources: { todoist: Boolean(todoistToken), notion: Boolean(notionToken && settings.notionLink), calendar: Boolean(calendarLink) },
     maximized: Boolean(restoreBounds),
     update,
     updateStatus,
@@ -304,6 +306,7 @@ function registerIpc() {
     if ('todoistToken' in patch) writeSecret('todoistToken', patch.todoistToken);
     if ('notionToken' in patch) writeSecret('notionToken', patch.notionToken);
     if ('notionLink' in patch) settings.notionLink = String(patch.notionLink || '').trim().slice(0, 400);
+    if ('calendarLink' in patch) writeSecret('calendarLink', String(patch.calendarLink || '').slice(0, 600));
     saveSettings();
     if (untouched) setPhase(state.phase);
     syncPetWindow();
@@ -336,6 +339,7 @@ function registerIpc() {
     try {
       if (which === 'todoist') return { items: await taskSources.fetchTodoist(readSecret('todoistToken')) };
       if (which === 'notion') return { items: await taskSources.fetchNotion(readSecret('notionToken'), settings.notionLink) };
+      if (which === 'calendar') return { items: await calendarSource.fetchCalendar(readSecret('calendarLink')) };
       return { error: 'Unknown list' };
     } catch (e) {
       return { error: e.message };

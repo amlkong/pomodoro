@@ -66,10 +66,11 @@
           <button id="tabSession" role="tab" class="on">To do</button>
           <button id="tabTodoist" role="tab" hidden>Todoist</button>
           <button id="tabNotion" role="tab" hidden>Notion</button>
+          <button id="tabCalendar" role="tab" hidden>Calendar</button>
         </span>
         <button id="clearDone" hidden>clear done</button>
         <span id="extTools" hidden>
-          <button id="extFilter" title="Show only what's due today, or everything"></button>
+          <button id="extFilter" title="Switch between today and everything"></button>
           <button id="extRefresh" title="Refresh" aria-label="Refresh">↻</button>
         </span>
       </div>
@@ -112,6 +113,9 @@
     </label>
     <label class="col">Notion page or database link
       <input type="text" id="notionLink" placeholder="https://www.notion.so/..." spellcheck="false">
+    </label>
+    <label class="col">Calendar private link <button class="link" id="calendarOff" type="button" hidden>disconnect</button>
+      <input type="password" id="calendarLink" placeholder="Google Calendar → Secret address in iCal format" spellcheck="false" autocomplete="off">
     </label>
     <h3>About</h3>
     <div class="row"><span id="verLong">Pomo</span> <button class="link" id="checkUpdates">Check for updates</button></div>

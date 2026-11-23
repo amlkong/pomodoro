@@ -79,12 +79,15 @@ function render(s) {
   // which extra tabs exist depends on what is connected in settings
   $('tabTodoist').hidden = !s.sources.todoist;
   $('tabNotion').hidden = !s.sources.notion;
+  $('tabCalendar').hidden = !s.sources.calendar;
+  $('calendarOff').hidden = !s.sources.calendar;
+  $('calendarLink').placeholder = s.sources.calendar ? 'saved ✓  (paste a new one to replace)' : 'Google Calendar → Secret address in iCal format';
   $('todoistOff').hidden = !s.sources.todoist;
   $('notionOff').hidden = !s.settings.notionLink && !s.sources.notion;
   $('todoistToken').placeholder = s.sources.todoist ? 'saved ✓  (paste a new one to replace)' : 'Todoist → Settings → Integrations → Developer';
   $('notionToken').placeholder = s.sources.notion ? 'saved ✓  (paste a new one to replace)' : 'from notion.so/profile/integrations';
   if (document.activeElement !== $('notionLink')) $('notionLink').value = s.settings.notionLink || '';
-  if ((tab === 'todoist' && !s.sources.todoist) || (tab === 'notion' && !s.sources.notion)) tab = 'session';
+  if (tab !== 'session' && !s.sources[tab]) tab = 'session';
   renderTasks(s.settings.tasks || []);
   if (document.activeElement !== $('petScale')) $('petScale').value = s.settings.petScale;
 
@@ -135,7 +138,12 @@ function renderTasks(tasks) {
 let tab = 'session';
 let anyDone = false;
 let sessionTexts = new Set();
-const ext = { todoist: { filter: '' }, notion: { filter: 'all' } }; // items, error, loading, at
+const ext = { todoist: { filter: '' }, notion: { filter: 'all' }, calendar: { filter: 'today' } }; // items, error, loading, at
+const EXT = {
+  todoist: { name: 'Todoist', filters: true, all: 'all', none: 'No open tasks in Todoist.', noneToday: 'Nothing due today. Click "today" to see everything.' },
+  notion: { name: 'Notion', filters: false, all: 'all', none: 'No open tasks in Notion.', noneToday: '' },
+  calendar: { name: 'your calendar', filters: true, all: 'week', none: 'Nothing on your calendar this week.', noneToday: 'Nothing on your calendar today. Click "today" to see the week.' },
+};
 
 function showTab(next) {
   tab = next;
@@ -143,6 +151,7 @@ function showTab(next) {
   $('tabSession').classList.toggle('on', isSession);
   $('tabTodoist').classList.toggle('on', tab === 'todoist');
   $('tabNotion').classList.toggle('on', tab === 'notion');
+  $('tabCalendar').classList.toggle('on', tab === 'calendar');
   $('sessionPane').hidden = !isSession;
   $('extPane').hidden = isSession;
   $('clearDone').hidden = !isSession || !anyDone;
@@ -172,14 +181,15 @@ async function loadExternal(which, force) {
 function renderExternal() {
   if (tab === 'session') return;
   const src = ext[tab];
-  const name = tab === 'todoist' ? 'Todoist' : 'Notion';
+  const info = EXT[tab];
+  const name = info.name;
   const items = (src.items || []).filter((t) => src.filter !== 'today' || t.today);
-  $('extFilter').hidden = tab !== 'todoist';
-  $('extFilter').textContent = src.filter === 'today' ? 'today' : 'all';
+  $('extFilter').hidden = !info.filters;
+  $('extFilter').textContent = src.filter === 'today' ? 'today' : info.all;
   $('extStatus').textContent = src.loading ? `Loading from ${name}…`
     : src.error ? src.error
     : !src.items ? ''
-    : !items.length ? (src.filter === 'today' ? 'Nothing due today. Click "today" to see everything.' : `No open tasks in ${name}.`)
+    : !items.length ? (src.filter === 'today' ? info.noneToday : info.none)
     : 'Click + to add one to this session.';
   const ul = $('extTasks');
   ul.textContent = '';
@@ -210,9 +220,11 @@ function renderExternal() {
 $('tabSession').onclick = () => showTab('session');
 $('tabTodoist').onclick = () => { showTab('todoist'); loadExternal('todoist'); };
 $('tabNotion').onclick = () => { showTab('notion'); loadExternal('notion'); };
+$('tabCalendar').onclick = () => { showTab('calendar'); loadExternal('calendar'); };
 $('extRefresh').onclick = () => loadExternal(tab, true);
 $('extFilter').onclick = () => {
-  ext.todoist.filter = ext.todoist.filter === 'today' ? 'all' : 'today';
+  if (tab === 'session') return;
+  ext[tab].filter = ext[tab].filter === 'today' ? 'all' : 'today';
   renderExternal();
 };
 
@@ -232,6 +244,14 @@ $('notionLink').addEventListener('change', (e) => {
 });
 $('todoistOff').onclick = (e) => { e.preventDefault(); window.api.updateSettings({ todoistToken: '' }); ext.todoist.items = null; };
 $('notionOff').onclick = (e) => { e.preventDefault(); window.api.updateSettings({ notionToken: '' }); ext.notion.items = null; };
+$('calendarLink').addEventListener('change', (e) => {
+  const value = e.target.value.trim();
+  if (!value) return;
+  window.api.updateSettings({ calendarLink: value });
+  e.target.value = '';
+  ext.calendar.items = null;
+});
+$('calendarOff').onclick = (e) => { e.preventDefault(); window.api.updateSettings({ calendarLink: '' }); ext.calendar.items = null; };
 
 function showSettings(show) {
   $('settings').hidden = !show;
