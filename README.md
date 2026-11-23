@@ -33,7 +33,7 @@ That's it. Pomo opens by itself, and from now on you start it from the **Pomo ic
 ## Install on Mac
 
 1. Open the **[latest release](https://github.com/amlkong/pomodoro/releases/latest)**.
-2. Under **Assets**, download the `.dmg`: `arm64` for Apple Silicon (M1/M2/M3/M4), `x64` for older Intel Macs. Apple menu → About This Mac tells you which you have.
+2. Under **Assets**, download the `.dmg`: `arm64` for Apple Silicon (M1/M2/M3/M4), `x64` for older Intel Macs. Apple menu → About This Mac tells you which you have. The Mac files are added a few minutes after the Windows one, so if a brand-new release doesn't list a `.dmg` yet, check back shortly or pick the previous release.
 3. Open the `.dmg` and drag Pomo into Applications.
 4. In Applications, right-click Pomo and choose **Open**, then **Open** again.
 5. If it still won't open: System Settings → Privacy & Security → scroll down → **Open Anyway**.

@@ -7,17 +7,14 @@ on:
 permissions:
   contents: read
 
+env:
+  # every build gets its own version number, e.g. 0.1.12
+  VERSION: 0.1.${{ github.run_number }}
+
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            name: Pomo-mac
-          - os: windows-latest
-            name: Pomo-windows
-    runs-on: ${{ matrix.os }}
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -26,10 +23,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      # every build gets its own version number, e.g. 0.1.12
-      - run: npm version "0.1.${{ github.run_number }}" --no-git-tag-version --allow-same-version
+      - run: npm version "${{ env.VERSION }}" --no-git-tag-version --allow-same-version
       - name: Check the Windows launcher scripts
-        if: runner.os == 'Windows'
         shell: cmd
         env:
           POMO_NO_START: "1"
@@ -43,33 +38,74 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
       - uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.name }}
+          name: Pomo-windows
           path: |
-            dist/*.dmg
             dist/*.exe
             dist/*.exe.blockmap
             dist/latest.yml
           if-no-files-found: error
 
-  # Puts the installers on the repo's Releases page so they are easy to find.
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm version "${{ env.VERSION }}" --no-git-tag-version --allow-same-version
+      - run: npx electron-builder --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: Pomo-mac
+          path: dist/*.dmg
+          if-no-files-found: error
+
+  # Publishes the release as soon as the Windows build is done. It does not wait
+  # for the Mac build: GitHub's Mac machines are sometimes unavailable for a long
+  # time, and that must not hold up the Windows app's updates.
   release:
-    needs: build
+    needs: windows
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v6
         with:
+          name: Pomo-windows
           path: dist
-          merge-multiple: true
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: 0.1.${{ github.run_number }}
         run: |
           ls -la dist
           # latest.yml and the .blockmap are what the Windows app reads to update itself
-          gh release create "v$VERSION" dist/*.exe dist/*.dmg dist/*.blockmap dist/latest.yml \
+          gh release create "v$VERSION" dist/*.exe dist/*.blockmap dist/latest.yml \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "Pomo $VERSION" \
-            --notes "Windows: download Pomo-Setup-$VERSION.exe and run it. Once installed, Pomo updates itself. Mac: download the .dmg (arm64 for Apple Silicon, x64 for Intel). Updating keeps your settings and to-do list."
+            --notes "Windows: download Pomo-Setup-$VERSION.exe and run it. Once installed, Pomo updates itself. Mac: download the .dmg (arm64 for Apple Silicon, x64 for Intel). The Mac files are added a little after the Windows one. Updating keeps your settings and to-do list."
+
+  # Adds the Mac installers to that release once they are built.
+  release-mac:
+    needs: [mac, release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: Pomo-mac
+          path: dist
+      - name: Add Mac installers to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la dist
+          gh release upload "v$VERSION" dist/*.dmg --repo "$GITHUB_REPOSITORY" --clobber
