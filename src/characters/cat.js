@@ -8,6 +8,8 @@ window.CHARACTERS.cat = {
   lines: {
     focus: 'Focus time. I will nap right here',
     break: 'Break time! Play with me',
+    paused: ["Paused. Time for a little stretch", "Taking five? I will keep your spot warm"],
+    resumed: ["Back to it, meow", "Okay, I am watching again"],
     focusDone: 'You did it!! Treat time',
     breakDone: 'Okay human, back to work',
     taskDone: ['Purrfect!', 'One down, meow', 'Good human!', 'Yay, meow!'],

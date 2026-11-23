@@ -8,6 +8,8 @@ window.CHARACTERS.wolf = {
   lines: {
     focus: 'Focus time. I will curl up right here',
     break: 'Break time! Awoo!',
+    paused: ["Paused. I will guard your spot", "Taking a breather? Me too"],
+    resumed: ["Back on the trail!", "Awoo, let's go"],
     focusDone: 'You did it!! Awoooo',
     breakDone: 'Okay! Back on the trail',
     taskDone: ['Awoo!', 'One down!', 'Good hunt!', 'Nice one!'],

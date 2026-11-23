@@ -162,18 +162,25 @@
     requestAnimationFrame(frame);
   }
 
+  let wasPaused = false;
   function applyState(s) {
     setCharacter(s.settings.character);
     if (!resize) setScale(Number(s.settings.petScale) || 1);
     const next = !s.running ? 'idle' : s.phase === 'focus' ? 'focus' : 'break';
+    // paused = stopped partway through a round (not a fresh or finished one)
+    const paused = !s.running && s.remainingMs < s.totalMs;
+    const resuming = wasPaused && next !== 'idle';
+    wasPaused = paused;
     if (next === mode) return;
     mode = next;
     targetX = null;
     waitUntil = 0;
     if (performance.now() < actUntil) return; // mid celebration, let that finish
     setPose('');
-    if (mode === 'focus') say(char.lines.focus);
-    if (mode === 'break') say(char.lines.break);
+    if (paused) say(pick(char.lines.paused));
+    else if (resuming) say(pick(char.lines.resumed));
+    else if (mode === 'focus') say(char.lines.focus);
+    else if (mode === 'break') say(char.lines.break);
   }
 
   // In the overlay, clicks only land on Pomo and pass through everywhere else.

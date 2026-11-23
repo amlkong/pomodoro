@@ -9,6 +9,8 @@ window.CHARACTERS.otter = {
   lines: {
     focus: 'Focus time. I shall meditate',
     break: 'Break time! Dance with me',
+    paused: ["Paused. I will keep watch", "A little pause. Breathe in, breathe out"],
+    resumed: ["Back to it!", "Onward, friend"],
     focusDone: 'You did it!! Break time',
     breakDone: 'Okay! Let\'s go again',
     taskDone: ['One down!', 'Nice one!', 'Clean cut!', 'Checked off!'],

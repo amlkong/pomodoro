@@ -8,6 +8,8 @@ window.CHARACTERS.panda = {
   lines: {
     focus: 'Focus time. I will curl up here',
     break: 'Break time! Wiggle with me',
+    paused: ["Paused. Snack time for me", "Little pause. I will wait right here"],
+    resumed: ["Back to it!", "Here we go again"],
     focusDone: 'You did it!! Snack break',
     breakDone: 'Okay! Back up the tree we go',
     taskDone: ['Yay!', 'One down!', 'So proud!', 'Nice work!'],

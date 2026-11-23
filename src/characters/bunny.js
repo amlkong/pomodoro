@@ -8,6 +8,8 @@ window.CHARACTERS.bunny = {
   lines: {
     focus: 'Focus time. I will loaf right here',
     break: 'Break time! Binky with me',
+    paused: ["Paused. Time for a nibble", "Little pause. I will wait here"],
+    resumed: ["Hop back to it!", "Okay, ears up"],
     focusDone: 'You did it!! Treat time',
     breakDone: 'Okay! Hop back to it',
     taskDone: ['Binky!', 'One down!', 'Hop hop!', 'Nice one!'],
