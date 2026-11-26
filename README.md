@@ -60,6 +60,7 @@ Either way, your settings, to-do list and Spotify connection are kept.
 - The dots show how many focus rounds you've done toward the next long break.
 - When a round ends, a soft chime plays and a desktop notification pops up. You can turn the chime off in ⚙ (**Alarm sound when a round ends**).
 - **□** at the top right makes the window fill the screen, with everything bigger. Click it again to go back to the small window.
+- **Drag the bottom-right corner** to make the window any size you like, which gives the lists more room. Pomo remembers the size. Double-click the corner to go back to the standard size.
 - **⚙** opens settings: how long each round is, how many rounds before a long break, whether the next round starts by itself, and Spotify.
 
 ### The to-do list
@@ -125,7 +126,12 @@ There are two extra tabs:
 - **Tasks** shows either Todoist or Notion. A small dropdown at the top of the tab picks which one, and Pomo remembers your choice, so you only set it once.
 - **Calendar** shows your events for today or the coming week.
 
-By default everything is read-only: Pomo never changes anything in Todoist, Notion or your calendar. The one exception is an option you can switch on for Todoist, described below.
+Out of the box everything is read-only: Pomo never changes anything in Todoist, Notion or your calendar. If you want Pomo to be the one place you manage your day, you can let it make changes too:
+
+- **Todoist:** complete, add and delete tasks (one switch in ⚙)
+- **Google Calendar:** add and delete events, and log your focus rounds (by signing in with Google)
+
+Both are described below. Anything that deletes always asks "are you sure?" first.
 
 ### Todoist
 
@@ -135,12 +141,13 @@ By default everything is read-only: Pomo never changes anything in Todoist, Noti
 
 Open the **Tasks** tab. It starts on what's overdue and due today. Click **today** to switch to all your open tasks, and **↻** to refresh.
 
-**Checking tasks off in Todoist from Pomo.** In ⚙, turn on **Ticking a task also completes it in Todoist**. Then:
+**Changing Todoist from Pomo.** In ⚙, turn on **Let Pomo change Todoist**. Then, in the **Tasks** tab:
 
-- a task you picked from Todoist (it carries a small "Todoist" tag in your to-do list) is completed in Todoist when you tick it in Pomo, and reopened there if you untick it
-- each row in the Tasks tab gets a round ✓ button that completes that task in Todoist directly, without adding it to your session
+- **Add a task:** type it in the box at the top and press Enter. It goes to your Todoist Inbox.
+- **Complete a task:** click the round ✓ on its row. A task you picked into your to-do list (it carries a small "Todoist" tag) is also completed in Todoist when you tick it in Pomo, and reopened there if you untick it.
+- **Delete a task:** hover the row and click **×**, then **Delete**. This removes it from Todoist for good, and Todoist has no undo for that, so for finished work completing is usually the better choice.
 
-With the option off, ticking only affects Pomo's own list. Tasks you typed in yourself are never sent to Todoist.
+With the switch off, Pomo only reads your tasks. Tasks you typed into Pomo's own to-do list are never sent to Todoist.
 
 ### Notion
 
@@ -159,23 +166,70 @@ Notion is read-only in Pomo: ticking a task here doesn't change the Notion page.
 
 ### Google Calendar
 
-This uses your calendar's private link, which lets an app read your events without signing in to Google.
+There are two ways to connect, and you can use either or both.
+
+| | Private link | Sign in with Google |
+| --- | --- | --- |
+| See your events | ✓ | ✓ |
+| Add events from Pomo | | ✓ |
+| Delete events from Pomo | | ✓ |
+| Log focus rounds to your calendar | | ✓ |
+| Setup | one copy and paste | about 15 minutes, once |
+
+If you sign in with Google, Pomo uses that. The private link is the simple read-only option.
+
+#### Option 1: private link (read-only)
 
 1. On a computer, open [calendar.google.com](https://calendar.google.com).
 2. Click the **gear** at the top right → **Settings**.
 3. In the left sidebar, under **Settings for my calendars**, click the calendar you want.
-4. Scroll to **Integrate calendar** and copy the **Secret address in iCal format**. It ends in `basic.ics`.
-5. In Pomo, click **⚙**, scroll to the **Calendar** heading, and paste it into **Google Calendar private link**.
+4. Scroll to **Integrate calendar** and copy the **Secret address in iCal format**. It ends in `basic.ics`. (Not the "Public address" just above it.)
+5. In Pomo, click **⚙**, scroll to **Calendar**, and paste it into **Or read-only: private link**.
 
-Open the **Calendar** tab. It opens on today's events in time order, with all-day events first. Click **today** to switch to the coming week. Repeating events, skipped dates and multi-day events are all handled.
+Treat that link like a password: anyone who has it can read that calendar. If it ever gets out, Google's **Reset** button next to it makes a new one. School and work Google accounts sometimes have this link switched off by an administrator. The same box accepts the private iCal link from Outlook or iCloud calendars too.
 
-Treat that link like a password: anyone who has it can read that calendar. If it ever gets out, Google's **Reset** button next to it makes a new one. School and work Google accounts sometimes have this link switched off by an administrator.
+#### Option 2: sign in with Google (add and delete events)
 
-The same box accepts the private iCal link from Outlook or iCloud calendars too.
+Google requires every app that changes a calendar to be registered with them. Pomo is a personal app, so you register your own free copy. It's a one-time job of about 15 minutes.
+
+**Part A: create your Google project**
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) and sign in with the Google account whose calendar you use.
+2. At the top, click the project dropdown → **New project**. Name it "Pomo" and click **Create**. Make sure it's selected afterwards.
+3. In the search bar at the top, type **Google Calendar API**, open it, and click **Enable**.
+
+**Part B: the consent screen**
+
+4. In the left menu go to **APIs & Services → OAuth consent screen** (Google sometimes labels this area **Google Auth Platform**). Click **Get started**.
+5. App name: "Pomo". Support email: your email. Audience: **External**. Contact email: your email. Agree and **Create**.
+6. Open **Audience** in that area's menu. Under **Publishing status**, click **Publish app** and confirm, so it says **In production**. This matters: if you leave it on "Testing", Google signs Pomo out every 7 days.
+
+**Part C: your sign-in ID**
+
+7. Open **Clients** (or **Credentials → Create credentials → OAuth client ID**).
+8. Application type: **Desktop app**. Name: "Pomo". Click **Create**.
+9. Copy the **Client ID** and the **Client secret** that it shows.
+
+**Part D: connect Pomo**
+
+10. In Pomo, click **⚙** and scroll to **Calendar**.
+11. Paste the Client ID into **Google Client ID** and the secret into **Google Client secret**.
+12. Click **Sign in with Google**. Your browser opens.
+13. Pick your account. Google shows **"Google hasn't verified this app"**. That's expected for a personal app: click **Advanced**, then **Go to Pomo (unsafe)**. It says "unsafe" only because Google hasn't reviewed it, and the app is the one you just registered yourself.
+14. Tick the box allowing Pomo to **view and edit events on all your calendars**, and click **Continue**.
+15. The page says Pomo is connected, and you can close the tab.
+
+**Using it.** In the **Calendar** tab:
+
+- **Add an event:** type it in the box at the top in plain words and press Enter, for example `Dentist tomorrow 3pm` or `Lunch with Sam Friday 12:30`. Google works out the date and time. With no time given, it starts now.
+- **Delete an event:** hover the row and click **×**, then **Delete**. For a repeating event this removes only that one occurrence.
+- **Log your focus rounds:** in ⚙, turn on **Log finished focus rounds to my calendar**. Each focus round you finish is added to your calendar as "Focus session 🍅" with its real start and end time, so your calendar becomes a record of your day.
+
+Pomo works with your main calendar. It asks Google only for permission to read and change events, not your calendar settings or sharing. Click **Sign out of Google** in ⚙ at any time, and you can remove Pomo's access completely at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
 
 ### Good to know
 
-- Your tokens and calendar link are saved on your computer only, encrypted by Windows or macOS, and are never shown again after you paste them. Click **disconnect** next to a field to remove one.
+- Your tokens, calendar link and Google sign-in are saved on your computer only, encrypted by Windows or macOS, and are never shown again after you paste them. Click **disconnect** next to a field to remove one.
 - A task you've already added shows a ✓ instead of a +.
 - Lists refresh when you open the tab, at most every two minutes. Click **↻** to refresh right away.
 - **↗** opens Todoist, your Notion page or Google Calendar in your browser.
@@ -217,6 +271,12 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 **Mac says the app can't be opened.** Right-click → **Open**, or System Settings → Privacy & Security → **Open Anyway**.
 
 **The Tasks tab says Todoist or Notion "is having trouble on its side" (error 500 or similar).** That's their server failing, not your setup, and the Todoist or Notion app doesn't need to be open for Pomo to work. Pomo already retried a few times before showing it. Wait a minute and press **↻**. The **↗** button next to it opens the real app in your browser, which is a quick way to see whether it's down for everyone.
+
+**Google says "Access blocked" or "This app is blocked" when signing in.** Check that you chose **Desktop app** as the application type (Part C, step 8) and that the Google Calendar API is enabled for your project (Part A, step 3).
+
+**Pomo says "Google signed Pomo out" every week.** Your Google project is still on "Testing". Do Part B, step 6 (publish the app so it says **In production**), then sign in again.
+
+**The Calendar tab says the Google Calendar API isn't switched on.** Do Part A, step 3, wait a minute, and press **↻**.
 
 **The Tasks or Calendar tab shows an error.** The message says what's wrong. "The calendar link was refused" means the link is incomplete or was reset, so copy the Secret address in iCal format again. "Didn't accept that token" means the token was copied incompletely, so paste it again. "Notion can't see that page" means the page hasn't been shared with your integration yet (step 3 of the Notion setup).
 
@@ -269,6 +329,7 @@ src/main.js          timer logic, windows, to-do storage, music control
 src/spotify.js       Spotify login and play/pause
 src/task-sources.js  task lists from Todoist and Notion (and completing Todoist tasks, if switched on)
 src/calendar-source.js  read-only events from a calendar's private link
+src/google-calendar.js  Google sign-in: read, add and delete calendar events
 src/characters/      one .js and one .css per character
 src/pet/             how a character behaves (shared by the screen overlay and the timer window)
 src/timer/           the timer window

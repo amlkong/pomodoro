@@ -5,7 +5,7 @@ const LABELS = {
   short: ['a little break', 'breathe and stretch', 'paused, no rush'],
   long: ['a long break', 'you earned this', 'paused, no rush'],
 };
-const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'alarmSound', 'petScale', 'musicOnBreaks', 'todoistSync', 'spotifyClientId', 'spotifyPlaylist'];
+const SETTING_IDS = ['focusMin', 'shortMin', 'longMin', 'longEvery', 'autoStart', 'alarmSound', 'petScale', 'musicOnBreaks', 'todoistSync', 'calendarLogFocus', 'googleClientId', 'spotifyClientId', 'spotifyPlaylist'];
 
 const mini = $('mini');
 let miniChar = '';
@@ -13,6 +13,7 @@ let current = null;
 let settingsFilled = false;
 let tasksKey = '';
 let syncShown = null;
+let canShown = '';
 
 function fmt(ms) {
   const total = Math.ceil(ms / 1000);
@@ -83,14 +84,23 @@ function render(s) {
   for (const id of ['taskApp', 'taskAppSetting']) if (document.activeElement !== $(id)) $(id).value = taskApp;
   $('todoistFields').hidden = taskApp !== 'todoist';
   $('notionFields').hidden = taskApp !== 'notion';
-  $('calendarOff').hidden = !s.sources.calendar;
-  $('calendarLink').placeholder = s.sources.calendar ? 'saved ✓  (paste a new one to replace)' : 'Secret address in iCal format (ends in basic.ics)';
+  $('calendarOff').hidden = !s.sources.calendarLink;
+  $('calendarLink').placeholder = s.sources.calendarLink ? 'saved ✓  (paste a new one to replace)' : 'Secret address in iCal format (ends in basic.ics)';
   $('todoistOff').hidden = !s.sources.todoist;
   $('notionOff').hidden = !s.settings.notionLink && !s.sources.notion;
   $('todoistToken').placeholder = s.sources.todoist ? 'saved ✓  (paste a new one to replace)' : 'Todoist → Settings → Integrations → Developer';
   $('notionToken').placeholder = s.sources.notion ? 'saved ✓  (paste a new one to replace)' : 'from notion.so/profile/integrations';
   if (document.activeElement !== $('notionLink')) $('notionLink').value = s.settings.notionLink || '';
   $('syncMsg').textContent = s.syncMsg || '';
+  // Google sign-in
+  $('googleConnect').textContent = s.google.connected ? 'Sign out of Google' : 'Sign in with Google';
+  $('googleMsg').textContent = s.google.message || (s.google.connected ? 'Signed in. You can add and delete events from the Calendar tab.' : '');
+  $('googleClientSecret').placeholder = s.google.hasSecret ? 'saved ✓  (paste a new one to replace)' : 'from the same Google Cloud page';
+  $('calendarLogFocus').disabled = !s.google.connected;
+  $('winGrip').hidden = s.maximized;
+  // what Pomo may change decides which buttons the lists show
+  const canKey = JSON.stringify(s.can);
+  if (canKey !== canShown) { canShown = canKey; if (tab !== 'session') setTimeout(renderExternal, 0); }
   // the Todoist list shows extra buttons when syncing is switched on or off
   if (syncShown !== s.settings.todoistSync) { syncShown = s.settings.todoistSync; tasksKey = ''; }
   renderTasks(s.settings.tasks || []);
@@ -156,9 +166,9 @@ let anyDone = false;
 let sessionTexts = new Set();
 const ext = { todoist: { filter: '' }, notion: { filter: 'all' }, calendar: { filter: 'today' } }; // items, error, loading, at
 const EXT = {
-  todoist: { name: 'Todoist', open: 'Todoist', filters: true, all: 'all', none: 'No open tasks in Todoist.', noneToday: 'Nothing due today. Click "today" to see everything.' },
+  todoist: { name: 'Todoist', open: 'Todoist', addHint: 'Add a task to Todoist and press Enter', deleteWord: 'Delete from Todoist for good?', filters: true, all: 'all', none: 'No open tasks in Todoist.', noneToday: 'Nothing due today. Click "today" to see everything.' },
   notion: { name: 'Notion', open: 'your Notion page', filters: false, all: 'all', none: 'No open tasks in Notion.', noneToday: '' },
-  calendar: { name: 'your calendar', open: 'Google Calendar', filters: true, all: 'week', none: 'Nothing on your calendar this week.', noneToday: 'Nothing on your calendar today. Click "today" to see the week.' },
+  calendar: { name: 'your calendar', open: 'Google Calendar', addHint: 'Add an event, e.g. Dentist tomorrow 3pm', deleteWord: 'Delete this event from your calendar?', filters: true, all: 'week', none: 'Nothing on your calendar this week.', noneToday: 'Nothing on your calendar today. Click "today" to see the week.' },
 };
 
 function showTab(next) {
@@ -207,19 +217,53 @@ function renderExternal() {
     : !src.items ? ''
     : !items.length ? (src.filter === 'today' ? info.noneToday : info.none)
     : 'Click + to add one to your session.';
+  // what Pomo may change in this list right now
+  const key = sourceOf(tab);
+  const can = (current && current.can) || {};
+  const canWrite = (key === 'todoist' && can.todoistWrite) || (key === 'calendar' && can.calendarWrite);
+  const canComplete = key === 'todoist' && can.todoistWrite;
+  $('extAdd').hidden = !canWrite;
+  $('extAdd').placeholder = info.addHint || '';
+
   const ul = $('extTasks');
   ul.textContent = '';
   for (const t of items) {
     const li = document.createElement('li');
+
+    // asked to delete: the row turns into a yes / no question first
+    if (src.confirm === t.id) {
+      li.className = 'asking';
+      const q = document.createElement('span');
+      q.className = 'text';
+      q.textContent = info.deleteWord;
+      const yes = document.createElement('button');
+      yes.className = 'yes';
+      yes.textContent = 'Delete';
+      yes.onclick = async () => {
+        yes.disabled = true;
+        const res = await window.api.deleteFromSource(key, t.id);
+        src.confirm = null;
+        if (res.error) src.error = res.error;
+        else { src.error = ''; src.items = (src.items || []).filter((x) => x.id !== t.id); }
+        renderExternal();
+      };
+      const no = document.createElement('button');
+      no.className = 'no';
+      no.textContent = 'Keep';
+      no.onclick = () => { src.confirm = null; renderExternal(); };
+      li.append(q, yes, no);
+      ul.append(li);
+      continue;
+    }
+
     const added = sessionTexts.has(t.text);
     const add = document.createElement('button');
     add.className = 'add';
     add.textContent = added ? '✓' : '+';
     add.disabled = added;
     add.title = added ? 'Already in your to-do list' : 'Add to this session';
-    add.setAttribute('aria-label', `${added ? 'Already added' : 'Add'}: ${t.text}`);
-    const fromTodoist = sourceOf(tab) === 'todoist';
-    add.onclick = () => window.api.addTask(fromTodoist ? { text: t.text, source: 'todoist', sourceId: t.id } : t.text);
+    add.setAttribute('aria-label', `${added ? 'Already added' : 'Add to this session'}: ${t.text}`);
+    add.onclick = () => window.api.addTask(key === 'todoist' ? { text: t.text, source: 'todoist', sourceId: t.id } : t.text);
     const text = document.createElement('span');
     text.className = 'text';
     text.textContent = t.text;
@@ -230,7 +274,7 @@ function renderExternal() {
       tag.textContent = t.label;
       li.append(tag);
     }
-    if (fromTodoist && current && current.settings.todoistSync) {
+    if (canComplete) {
       // complete it in Todoist right here, without adding it to the session
       const done = document.createElement('button');
       done.className = 'complete';
@@ -246,9 +290,40 @@ function renderExternal() {
       };
       li.append(done);
     }
+    if (canWrite) {
+      const del = document.createElement('button');
+      del.className = 'del';
+      del.textContent = '×';
+      del.title = key === 'todoist' ? 'Delete from Todoist' : 'Delete from your calendar';
+      del.setAttribute('aria-label', `${del.title}: ${t.text}`);
+      del.onclick = () => { src.confirm = t.id; renderExternal(); };
+      li.append(del);
+    }
     ul.append(li);
   }
 }
+
+// typing in the box above a list adds a new task to Todoist, or a new event to the calendar
+$('extAdd').addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter' || tab === 'session') return;
+  const value = e.target.value.trim();
+  if (!value) return;
+  const key = sourceOf(tab);
+  const src = ext[key];
+  e.target.disabled = true;
+  const res = await window.api.addToSource(key, value);
+  e.target.disabled = false;
+  if (res.error) src.error = res.error;
+  else {
+    src.error = '';
+    e.target.value = '';
+    // the new item's due date or time is decided by the other app, so re-read the list
+    await loadExternal(key, true);
+    if (key === 'todoist' && src.filter === 'today') { src.filter = 'all'; }
+  }
+  renderExternal();
+  e.target.focus();
+});
 
 $('tabSession').onclick = () => showTab('session');
 $('tabTasks').onclick = () => { showTab('tasks'); loadExternal(taskApp); };
@@ -295,6 +370,48 @@ $('calendarLink').addEventListener('change', (e) => {
   ext.calendar.items = null;
 });
 $('calendarOff').onclick = (e) => { e.preventDefault(); window.api.updateSettings({ calendarLink: '' }); ext.calendar.items = null; };
+
+// ---------- Google sign-in (for adding and deleting calendar events) ----------
+$('googleClientSecret').addEventListener('change', (e) => {
+  const value = e.target.value.trim();
+  if (!value) return;
+  window.api.updateSettings({ googleClientSecret: value });
+  e.target.value = '';
+});
+$('googleConnect').onclick = () => {
+  if (current && current.google.connected) window.api.googleDisconnect();
+  else window.api.googleConnect();
+  ext.calendar.items = null;
+};
+
+// ---------- dragging the corner to resize the window ----------
+{
+  const grip = $('winGrip');
+  let from = null;
+  let pending = null;
+  grip.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    // keep receiving the pointer even when it moves outside the window
+    grip.setPointerCapture(e.pointerId);
+    from = { x: e.screenX, y: e.screenY, w: window.innerWidth, h: window.innerHeight };
+  });
+  grip.addEventListener('pointermove', (e) => {
+    if (!from) return;
+    const size = { w: from.w + (e.screenX - from.x), h: from.h + (e.screenY - from.y) };
+    if (!pending) requestAnimationFrame(() => { window.api.resizeWindow(pending); pending = null; });
+    pending = size;
+  });
+  const end = (e) => {
+    if (!from) return;
+    from = null;
+    if (grip.hasPointerCapture(e.pointerId)) grip.releasePointerCapture(e.pointerId);
+    window.api.resizeWindowEnd();
+  };
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
+  grip.addEventListener('dblclick', () => window.api.resetWindowSize());
+}
 
 function showSettings(show) {
   $('settings').hidden = !show;

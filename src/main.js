@@ -4,6 +4,7 @@ const fs = require('fs');
 const spotify = require('./spotify');
 const taskSources = require('./task-sources');
 const calendarSource = require('./calendar-source');
+const googleCal = require('./google-calendar');
 
 const DEFAULTS = {
   focusMin: 25,
@@ -23,9 +24,15 @@ const DEFAULTS = {
   todoistToken: '', // kept encrypted, never sent to the window
   notionToken: '',  // kept encrypted, never sent to the window
   notionLink: '',
-  todoistSync: false, // opt-in: ticking a Todoist task in Pomo also completes it in Todoist
+  todoistSync: false, // opt-in: Pomo may change Todoist (complete, add and delete tasks)
   taskApp: '',      // 'todoist' or 'notion': which one the Tasks tab shows
   calendarLink: '', // a private link, so kept encrypted like the tokens
+  googleClientId: '',
+  googleClientSecret: '', // kept encrypted, never sent to the window
+  googleRefresh: '',      // the saved Google sign-in; kept encrypted, never sent to the window
+  calendarLogFocus: false, // opt-in: add each finished focus round to Google Calendar
+  winW: 0, // window size chosen by dragging its corner; 0 = the automatic size
+  winH: 0,
   tasks: [], // { id, text, done }
 };
 const DURATION_KEY = { focus: 'focusMin', short: 'shortMin', long: 'longMin' };
@@ -43,6 +50,7 @@ const startedAt = Date.now();
 let endAt = 0;
 let spotifyMsg = '';
 let syncMsg = ''; // last problem telling Todoist about a ticked task, if any
+let googleMsg = ''; // progress or problem with Google sign-in and calendar changes
 let lastWantMusic = null;
 
 // ---------- settings ----------
@@ -94,6 +102,20 @@ function setPhase(phase) {
   if (state.running) endAt = Date.now() + state.remainingMs;
 }
 
+// (Re)starts the Google Calendar connection from what is saved in settings.
+function initGoogle() {
+  googleCal.init({
+    clientId: settings.googleClientId,
+    clientSecret: readSecret('googleClientSecret'),
+    refreshToken: readSecret('googleRefresh'),
+    onRefreshToken: (token) => {
+      writeSecret('googleRefresh', token);
+      saveSettings();
+      broadcast();
+    },
+  });
+}
+
 // Secrets (API tokens) are stored encrypted with the OS keychain when possible.
 function readSecret(key) {
   const raw = settings[key];
@@ -112,13 +134,17 @@ function writeSecret(key, value) {
 }
 
 function publicState() {
-  const { spotifyRefresh, todoistToken, notionToken, calendarLink, ...safeSettings } = settings;
+  const { spotifyRefresh, todoistToken, notionToken, calendarLink, googleClientSecret, googleRefresh, ...safeSettings } = settings;
   return {
     ...state,
     settings: safeSettings,
     spotify: { connected: spotify.isConnected(), message: spotifyMsg },
     syncMsg,
-    sources: { todoist: Boolean(todoistToken), notion: Boolean(notionToken && settings.notionLink), calendar: Boolean(calendarLink) },
+    google: { connected: googleCal.isConnected(), hasSecret: Boolean(googleClientSecret), message: googleMsg },
+    sources: { todoist: Boolean(todoistToken), notion: Boolean(notionToken && settings.notionLink), calendar: Boolean(calendarLink) || googleCal.isConnected(), calendarLink: Boolean(calendarLink) },
+    // what Pomo is allowed to change in the other apps right now
+    can: { todoistWrite: Boolean(settings.todoistSync && todoistToken), calendarWrite: googleCal.isConnected() },
+    customSize: Boolean(settings.winW && settings.winH),
     maximized: Boolean(restoreBounds),
     update,
     updateStatus,
@@ -148,8 +174,19 @@ function setRunning(running) {
   broadcast();
 }
 
+// Writes a finished focus round into Google Calendar, if that option is on.
+function logFocusRound(lengthMs) {
+  if (!settings.calendarLogFocus || !googleCal.isConnected()) return;
+  const end = new Date();
+  googleCal.createEvent({ summary: 'Focus session 🍅', start: new Date(end.getTime() - lengthMs), end }).then(
+    () => { googleMsg = ''; },
+    (e) => { googleMsg = `Couldn't log your focus round: ${e.message}`; },
+  ).finally(broadcast);
+}
+
 function finishPhase(skipped) {
   const was = state.phase;
+  const lengthMs = state.totalMs;
   if (was === 'focus' && !skipped) state.completed += 1;
 
   let next = 'focus';
@@ -166,6 +203,7 @@ function finishPhase(skipped) {
       : 'Ready for another round? You got this.';
     if (Notification.isSupported()) new Notification({ title, body, silent: false }).show();
     petEvent({ type: 'phase-end', from: was, to: next });
+    if (was === 'focus') logFocusRound(lengthMs);
   }
   syncMusic();
   broadcast();
@@ -199,16 +237,32 @@ function startSpotify() {
 
 // ---------- windows ----------
 // The timer window grows a little floor for Pomo when he lives inside it.
+// If the corner has been dragged, that size is used as it is.
 const TIMER_W = 340;
-function timerHeight() {
+const MIN_W = 320;
+const MIN_H = 520;
+function timerSize() {
+  const area = (timerWin && !timerWin.isDestroyed() ? screen.getDisplayMatching(timerWin.getBounds()) : screen.getPrimaryDisplay()).workArea;
+  if (settings.winW && settings.winH) {
+    return {
+      w: Math.max(MIN_W, Math.min(settings.winW, area.width)),
+      h: Math.max(MIN_H, Math.min(settings.winH, area.height)),
+    };
+  }
   const want = settings.showPet && settings.petRoam === 'window' ? 760 + Math.round(85 * settings.petScale) : 760;
-  return Math.min(want, screen.getPrimaryDisplay().workArea.height);
+  return { w: TIMER_W, h: Math.min(want, area.height) };
+}
+
+function setTimerBounds(bounds) {
+  timerWin.setResizable(true);
+  timerWin.setBounds(bounds);
+  timerWin.setResizable(false);
 }
 
 function createTimerWindow() {
   timerWin = new BrowserWindow({
-    width: TIMER_W,
-    height: timerHeight(),
+    width: timerSize().w,
+    height: timerSize().h,
     frame: false,
     transparent: true,
     resizable: false,
@@ -253,12 +307,18 @@ function syncPetWindow() {
   if (settings.showPet && settings.petRoam === 'screen') createPetWindow();
   else if (petWin && !petWin.isDestroyed()) petWin.close();
 
+  if (!timerWin || timerWin.isDestroyed()) return;
+  const { w, h } = timerSize();
   if (restoreBounds) {
-    restoreBounds.height = timerHeight(); // maximized: remember the right size for later
-  } else if (timerWin && !timerWin.isDestroyed() && timerWin.getSize()[1] !== timerHeight()) {
-    timerWin.setResizable(true);
-    timerWin.setSize(TIMER_W, timerHeight());
-    timerWin.setResizable(false);
+    // maximized: remember the right size for later
+    restoreBounds.width = w;
+    restoreBounds.height = h;
+  } else {
+    const [curW, curH] = timerWin.getSize();
+    if (curW !== w || curH !== h) {
+      const [x, y] = timerWin.getPosition();
+      setTimerBounds({ x, y, width: w, height: h });
+    }
   }
 }
 
@@ -296,7 +356,7 @@ function registerIpc() {
     if ('shortMin' in patch) settings.shortMin = clampInt(patch.shortMin, 1, 60, settings.shortMin);
     if ('longMin' in patch) settings.longMin = clampInt(patch.longMin, 1, 120, settings.longMin);
     if ('longEvery' in patch) settings.longEvery = clampInt(patch.longEvery, 2, 12, settings.longEvery);
-    for (const k of ['autoStart', 'showPet', 'musicOnBreaks', 'alarmSound', 'todoistSync']) {
+    for (const k of ['autoStart', 'showPet', 'musicOnBreaks', 'alarmSound', 'todoistSync', 'calendarLogFocus']) {
       if (k in patch) settings[k] = Boolean(patch[k]);
     }
     if (patch.petRoam === 'screen' || patch.petRoam === 'window') settings.petRoam = patch.petRoam;
@@ -312,6 +372,15 @@ function registerIpc() {
     if (patch.taskApp === 'todoist' || patch.taskApp === 'notion') settings.taskApp = patch.taskApp;
     if ('notionLink' in patch) settings.notionLink = String(patch.notionLink || '').trim().slice(0, 400);
     if ('calendarLink' in patch) writeSecret('calendarLink', String(patch.calendarLink || '').slice(0, 600));
+    if ('googleClientId' in patch || 'googleClientSecret' in patch) {
+      // a different Google project means the old sign-in no longer applies
+      const before = `${settings.googleClientId}|${readSecret('googleClientSecret')}`;
+      if ('googleClientId' in patch) settings.googleClientId = String(patch.googleClientId || '').trim().slice(0, 200);
+      if ('googleClientSecret' in patch) writeSecret('googleClientSecret', String(patch.googleClientSecret || '').slice(0, 200));
+      if (before !== `${settings.googleClientId}|${readSecret('googleClientSecret')}`) writeSecret('googleRefresh', '');
+      initGoogle();
+      googleMsg = '';
+    }
     saveSettings();
     if (untouched) setPhase(state.phase);
     syncPetWindow();
@@ -373,7 +442,7 @@ function registerIpc() {
 
   ipcMain.handle('sources:complete', async (_e, which, sourceId) => {
     if (which !== 'todoist') return { error: 'Only Todoist tasks can be completed from here' };
-    if (!settings.todoistSync) return { error: 'Turn on "also complete it in Todoist" in ⚙ first' };
+    if (!settings.todoistSync) return { error: 'Turn on "Let Pomo change Todoist" in ⚙ first' };
     const ok = await syncTodoist(String(sourceId), true);
     if (!ok) return { error: syncMsg };
     // if the same task is in this session's list, tick it there too
@@ -394,11 +463,82 @@ function registerIpc() {
     try {
       if (which === 'todoist') return { items: await taskSources.fetchTodoist(readSecret('todoistToken')) };
       if (which === 'notion') return { items: await taskSources.fetchNotion(readSecret('notionToken'), settings.notionLink) };
-      if (which === 'calendar') return { items: await calendarSource.fetchCalendar(readSecret('calendarLink')) };
+      if (which === 'calendar') {
+        // signed in with Google: the live calendar. Otherwise the read-only private link.
+        if (googleCal.isConnected()) return { items: await googleCal.listEvents() };
+        return { items: await calendarSource.fetchCalendar(readSecret('calendarLink')) };
+      }
       return { error: 'Unknown list' };
     } catch (e) {
       return { error: e.message };
     }
+  });
+
+  // Adding something new to Todoist or Google Calendar from Pomo.
+  ipcMain.handle('sources:add', async (_e, which, text) => {
+    try {
+      if (which === 'todoist') {
+        if (!settings.todoistSync) return { error: 'Turn on "Let Pomo change Todoist" in ⚙ first' };
+        return { item: await taskSources.addTodoist(readSecret('todoistToken'), text) };
+      }
+      if (which === 'calendar') {
+        if (!googleCal.isConnected()) return { error: 'Sign in with Google in ⚙ to add events' };
+        return { item: await googleCal.quickAdd(text) };
+      }
+      return { error: 'Nothing can be added to that list from here' };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
+  // Deleting for good. The window always asks "are you sure?" before calling this.
+  ipcMain.handle('sources:delete', async (_e, which, sourceId) => {
+    try {
+      if (which === 'todoist') {
+        if (!settings.todoistSync) return { error: 'Turn on "Let Pomo change Todoist" in ⚙ first' };
+        await taskSources.deleteTodoist(readSecret('todoistToken'), String(sourceId));
+        // a session task that pointed at it stays, but no longer talks to Todoist
+        let touched = false;
+        for (const t of settings.tasks) {
+          if (t.source === 'todoist' && t.sourceId === String(sourceId)) { delete t.source; delete t.sourceId; touched = true; }
+        }
+        if (touched) tasksChanged();
+        return { ok: true };
+      }
+      if (which === 'calendar') {
+        if (!googleCal.isConnected()) return { error: 'Sign in with Google in ⚙ to delete events' };
+        await googleCal.deleteEvent(String(sourceId));
+        return { ok: true };
+      }
+      return { error: 'Nothing can be deleted from that list here' };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
+  ipcMain.on('google:connect', async () => {
+    if (!settings.googleClientId || !readSecret('googleClientSecret')) {
+      googleMsg = 'Paste your Google Client ID and Client secret first';
+      return broadcast();
+    }
+    googleMsg = 'Waiting for you to sign in in the browser…';
+    broadcast();
+    try {
+      initGoogle();
+      await googleCal.connect((url) => shell.openExternal(url));
+      googleMsg = '';
+    } catch (e) {
+      googleMsg = e.message;
+    }
+    broadcast();
+  });
+
+  ipcMain.on('google:disconnect', () => {
+    googleCal.disconnect();
+    writeSecret('googleRefresh', '');
+    saveSettings();
+    googleMsg = '';
+    broadcast();
   });
 
   ipcMain.on('tasks:clearDone', () => {
@@ -456,9 +596,33 @@ function registerIpc() {
       restoreBounds = timerWin.getBounds();
       target = screen.getDisplayMatching(restoreBounds).workArea;
     }
-    timerWin.setResizable(true);
-    timerWin.setBounds(target);
-    timerWin.setResizable(false);
+    setTimerBounds(target);
+    broadcast();
+  });
+
+  // Dragging the corner of the window. The top-left corner stays where it is.
+  // Done by hand because see-through windows can't be resized the normal way.
+  ipcMain.on('win:resize', (_e, size) => {
+    if (!timerWin || timerWin.isDestroyed() || restoreBounds || !size) return;
+    const b = timerWin.getBounds();
+    const area = screen.getDisplayMatching(b).workArea;
+    const width = Math.round(Math.max(MIN_W, Math.min(Number(size.w) || b.width, area.x + area.width - b.x)));
+    const height = Math.round(Math.max(MIN_H, Math.min(Number(size.h) || b.height, area.y + area.height - b.y)));
+    if (width !== b.width || height !== b.height) setTimerBounds({ x: b.x, y: b.y, width, height });
+  });
+  // the drag ended: remember the size for next time
+  ipcMain.on('win:resizeEnd', () => {
+    if (!timerWin || timerWin.isDestroyed() || restoreBounds) return;
+    [settings.winW, settings.winH] = timerWin.getSize();
+    saveSettings();
+    broadcast();
+  });
+  // double-clicking the corner goes back to the automatic size
+  ipcMain.on('win:resetSize', () => {
+    settings.winW = 0;
+    settings.winH = 0;
+    saveSettings();
+    syncPetWindow();
     broadcast();
   });
   ipcMain.on('update:check', () => checkForUpdates());
@@ -549,6 +713,7 @@ app.whenReady().then(() => {
     refreshToken: readRefreshToken(),
     onRefreshToken: writeRefreshToken,
   });
+  initGoogle();
   setPhase('focus');
   registerIpc();
   createTimerWindow();

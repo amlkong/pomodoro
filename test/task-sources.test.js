@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { setRetryDelay, fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask } = require('../src/task-sources');
+const { setRetryDelay, fetchTodoist, setTodoistDone, addTodoist, deleteTodoist, fetchNotion, notionId, notionRowToTask } = require('../src/task-sources');
 setRetryDelay(1); // don't actually wait between retries in tests
 
 const reply = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
@@ -97,6 +97,33 @@ test('Todoist: a wrong token is not retried', async () => {
   global.fetch = async () => { tries++; return reply(401, {}); };
   await assert.rejects(fetchTodoist('bad'), /didn't accept that token/);
   assert.strictEqual(tries, 1);
+});
+
+test('Todoist: adding a task sends its text and returns the new task', async () => {
+  const calls = [];
+  global.fetch = async (url, init) => {
+    calls.push({ line: `${init.method} ${url.replace('https://api.todoist.com', '')}`, body: JSON.parse(init.body), type: init.headers['Content-Type'] });
+    return reply(200, { id: '9001', content: 'Buy hay' });
+  };
+  const task = await addTodoist('secret', '  Buy hay  ');
+  assert.deepStrictEqual(calls, [{ line: 'POST /api/v1/tasks', body: { content: 'Buy hay' }, type: 'application/json' }]);
+  assert.deepStrictEqual([task.id, task.text], ['9001', 'Buy hay']);
+});
+
+test('Todoist: deleting a task calls the right address', async () => {
+  const calls = [];
+  global.fetch = async (url, init) => { calls.push(`${init.method} ${url.replace('https://api.todoist.com', '')}`); return reply(204, {}); };
+  await deleteTodoist('secret', '9001');
+  assert.deepStrictEqual(calls, ['DELETE /api/v1/tasks/9001']);
+});
+
+test('Todoist: adding nothing, and deleting a task that is gone, each get a clear message', async () => {
+  await assert.rejects(addTodoist('secret', '   '), /Type what the task is/);
+  await assert.rejects(addTodoist('', 'x'), /isn't connected yet/);
+  global.fetch = async () => reply(404, {});
+  await assert.rejects(deleteTodoist('secret', '1'), /couldn't find that task/);
+  global.fetch = async () => reply(400, {});
+  await assert.rejects(addTodoist('secret', 'x'), /couldn't add that task \(400\)/);
 });
 
 // ---------- Notion ----------

@@ -184,3 +184,30 @@ main { min-height: 0; overflow: hidden; }
 #extTools { flex-shrink: 0; }
 #newTask { flex-shrink: 0; }
 #tasks, #extTasks { overscroll-behavior: contain; }
+
+/* adding to and deleting from Todoist / Google Calendar */
+#extAdd { width: 100%; margin: 2px 0 4px; padding: 6px 11px; border-radius: 12px; font-size: 12.5px; flex-shrink: 0; }
+#extAdd::placeholder { color: var(--muted); }
+#extAdd:disabled { opacity: .6; }
+#extTasks .del { flex-shrink: 0; width: 19px; height: 19px; border-radius: 50%; color: var(--muted); font-size: 15px; line-height: 1; margin-top: 1px; visibility: hidden; }
+#extTasks li:hover .del, #extTasks .del:focus-visible { visibility: visible; }
+#extTasks .del:hover { background: #e0483e; color: #fff; }
+#extTasks li.asking { background: var(--soft); align-items: center; }
+#extTasks li.asking .text { font-size: 12.5px; }
+#extTasks .yes, #extTasks .no { flex-shrink: 0; font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+#extTasks .yes { background: #e0483e; color: #fff; }
+#extTasks .no { background: #fff; color: var(--ink); }
+.hint { font-size: 11.5px; line-height: 1.35; color: var(--muted); }
+
+/* the corner you drag to resize the window */
+#winGrip {
+  position: absolute; right: 7px; bottom: 7px; width: 18px; height: 18px; z-index: 40; cursor: nwse-resize;
+  -webkit-app-region: no-drag; border-radius: 0 0 12px 0; touch-action: none;
+  background:
+    linear-gradient(135deg, transparent 0 58%, var(--muted) 58% 64%, transparent 64% 74%, var(--muted) 74% 80%, transparent 80%);
+  opacity: .55;
+}
+#winGrip:hover { opacity: 1; }
+#winGrip[hidden] { display: none; }
+/* when the window is wider than its usual size, keep the content in a tidy centred column */
+main, #settings { width: 100%; max-width: 560px; align-self: center; }

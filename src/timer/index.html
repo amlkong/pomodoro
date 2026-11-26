@@ -87,6 +87,7 @@
             <button id="extOpen" aria-label="Open in the browser">↗</button>
             </span>
         </div>
+        <input type="text" id="extAdd" maxlength="200" spellcheck="false" hidden>
         <ul id="extTasks"></ul>
       </div>
     </div>
@@ -122,7 +123,8 @@
       <label class="col">Todoist API token <button class="link" id="todoistOff" type="button" hidden>disconnect</button>
         <input type="password" id="todoistToken" placeholder="Todoist → Settings → Integrations → Developer" spellcheck="false" autocomplete="off">
       </label>
-      <label class="row">Ticking a task also completes it in Todoist <input type="checkbox" id="todoistSync"></label>
+      <label class="row">Let Pomo change Todoist <input type="checkbox" id="todoistSync"></label>
+      <div class="hint">When on, you can complete, add and delete Todoist tasks from Pomo. When off, Pomo only reads them.</div>
     </div>
     <div id="notionFields" hidden>
       <label class="col">Notion integration secret <button class="link" id="notionOff" type="button" hidden>disconnect</button>
@@ -133,7 +135,17 @@
       </label>
     </div>
     <h3>Calendar</h3>
-    <label class="col">Google Calendar private link <button class="link" id="calendarOff" type="button" hidden>disconnect</button>
+    <div class="hint">Sign in with Google to add and delete events from Pomo. The README has the one-time setup.</div>
+    <label class="col">Google Client ID
+      <input type="text" id="googleClientId" placeholder="ends in .apps.googleusercontent.com" spellcheck="false" autocomplete="off">
+    </label>
+    <label class="col">Google Client secret
+      <input type="password" id="googleClientSecret" placeholder="from the same Google Cloud page" spellcheck="false" autocomplete="off">
+    </label>
+    <button class="wide" id="googleConnect">Sign in with Google</button>
+    <div class="status" id="googleMsg"></div>
+    <label class="row">Log finished focus rounds to my calendar <input type="checkbox" id="calendarLogFocus"></label>
+    <label class="col">Or read-only: private link <button class="link" id="calendarOff" type="button" hidden>disconnect</button>
       <input type="password" id="calendarLink" placeholder="Secret address in iCal format (ends in basic.ics)" spellcheck="false" autocomplete="off">
     </label>
     <h3>About</h3>
@@ -142,6 +154,7 @@
     <button class="wide primary" id="done">Done</button>
   </section>
 </div>
+<div id="winGrip" title="Drag to resize the window. Double-click to reset it." aria-hidden="true"></div>
 <div id="pet"><div id="flip"></div></div>
 <div id="bubble"></div>
 <script src="../characters/otter.js"></script>

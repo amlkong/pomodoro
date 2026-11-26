@@ -1,6 +1,7 @@
 // Views of tasks kept in other apps (Todoist, Notion), so they can be looked at
-// inside Pomo and picked into the session's to-do list. Reading is all it does,
-// with one opt-in exception: completing a Todoist task (setTodoistDone).
+// inside Pomo and picked into the session's to-do list. Reading is all it does
+// by default. Changing Todoist (completing, adding, deleting a task) only
+// happens when the person has switched that on in settings.
 
 const TODOIST_URL = 'https://api.todoist.com/api/v1/tasks';
 const NOTION_URL = 'https://api.notion.com/v1';
@@ -95,6 +96,38 @@ async function setTodoistDone(token, id, done) {
   if (r.status === 404) throw new Error('Todoist couldn\'t find that task. It may have been deleted or finished already');
   if (r.status >= 500 || r.status === 429) throw new Error(serverTrouble('Todoist', r.status));
   throw new Error(`Todoist couldn't ${done ? 'complete' : 'reopen'} that task (${r.status})`);
+}
+
+// What went wrong, for the Todoist calls that change something.
+function todoistFail(r, doing) {
+  if (r.status === 401 || r.status === 403) return new Error('Todoist didn\'t accept that token. Copy it again from Todoist settings');
+  if (r.status === 404) return new Error('Todoist couldn\'t find that task. It may have been deleted or finished already');
+  if (r.status >= 500 || r.status === 429) return new Error(serverTrouble('Todoist', r.status));
+  return new Error(`Todoist couldn't ${doing} (${r.status})`);
+}
+
+// Creates a new task in Todoist's Inbox. Returns it in the same shape as the list.
+async function addTodoist(token, text) {
+  if (!token) throw new Error('Todoist isn\'t connected yet. Click ⚙ and paste your Todoist token');
+  const content = String(text || '').trim().slice(0, 140);
+  if (!content) throw new Error('Type what the task is first');
+  const r = await getJson(TODOIST_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  }, 'Todoist');
+  if (!r.ok) throw todoistFail(r, 'add that task');
+  return { id: String(r.data.id || ''), text: String(r.data.content || content), due: '', label: '', today: false, priority: 1 };
+}
+
+// Deletes a task from Todoist for good. Todoist has no undo for this.
+async function deleteTodoist(token, id) {
+  if (!token) throw new Error('Todoist isn\'t connected yet. Click ⚙ and paste your Todoist token');
+  const r = await getJson(`${TODOIST_URL}/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  }, 'Todoist');
+  if (!r.ok) throw todoistFail(r, 'delete that task');
 }
 
 // ---------- Notion ----------
@@ -210,4 +243,4 @@ async function fetchNotion(token, link) {
   return (await notionPageTodos(token, id)).slice(0, MAX_ITEMS);
 }
 
-module.exports = { setRetryDelay, fetchTodoist, setTodoistDone, fetchNotion, notionId, notionRowToTask, todoistLabel };
+module.exports = { setRetryDelay, fetchTodoist, setTodoistDone, addTodoist, deleteTodoist, fetchNotion, notionId, notionRowToTask, todoistLabel };

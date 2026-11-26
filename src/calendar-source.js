@@ -21,11 +21,47 @@ const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,
 const timeText = (d) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 const dayText = (d) => d.toLocaleDateString([], { weekday: 'short' });
 
+// The days Pomo shows: from the start of today to the end of the sixth day after.
+function viewWindow(now = new Date()) {
+  const from = startOfDay(now);
+  return { from, to: new Date(from.getTime() + DAYS_AHEAD * DAY_MS - 1) };
+}
+
+// One event -> a row for the list, or null if it falls outside the days in view.
+// `end` is the last moment the event covers (for all-day events, the end of its last day).
+function eventItem({ id, title, start, end, allDay }, from, to) {
+  const text = String(title || '').trim();
+  if (!text || !start) return null;
+  const last = end || start;
+  if (last < from || start > to) return null;
+
+  // show it on the first day in view that it touches
+  const shownOn = start < from ? from : startOfDay(start);
+  const isToday = dayKey(shownOn) === dayKey(from);
+  const multiDay = dayKey(startOfDay(last)) !== dayKey(startOfDay(start));
+  let label;
+  if (allDay) label = isToday ? (multiDay ? `until ${dayText(last)}` : 'all day') : dayText(shownOn);
+  else if (start < from) label = `until ${timeText(last)}`;
+  else label = isToday ? timeText(start) : `${dayText(start)} ${timeText(start)}`;
+
+  return {
+    id,
+    text: text.slice(0, 140),
+    label,
+    today: isToday,
+    sort: `${dayKey(shownOn)}|${allDay || start < from ? '00:00' : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`}`,
+  };
+}
+
+// Puts rows in day and time order and drops the helper field used for sorting.
+const finishItems = (items) => items
+  .sort((a, b) => a.sort.localeCompare(b.sort) || a.text.localeCompare(b.text))
+  .slice(0, MAX_ITEMS)
+  .map(({ sort, ...item }) => item);
+
 // Turns calendar text into a list of events for today and the days after it.
 function eventsFromIcs(text, now = new Date()) {
-  const from = startOfDay(now);
-  const to = new Date(from.getTime() + DAYS_AHEAD * DAY_MS - 1);
-  const todayKey = dayKey(from);
+  const { from, to } = viewWindow(now);
   const data = ical.sync.parseICS(text);
   const items = [];
   const seen = new Set();
@@ -41,43 +77,24 @@ function eventsFromIcs(text, now = new Date()) {
       continue; // one odd event must not hide the rest of the calendar
     }
     for (const inst of instances) {
+      if (!inst.start) continue;
       const title = String((inst.summary && inst.summary.val) || inst.summary || '').trim();
-      if (!title || !inst.start) continue;
       const allDay = Boolean(inst.isFullDay);
-      const start = inst.start;
-      // an all-day event's end is the morning after its last day
-      const end = inst.end ? new Date(inst.end.getTime() - (allDay ? 1 : 0)) : start;
-      if (end < from || start > to) continue;
-
-      // show it on the first day in view that it touches
-      const shownOn = start < from ? from : startOfDay(start);
-      const isToday = dayKey(shownOn) === todayKey;
-      const multiDay = dayKey(startOfDay(end)) !== dayKey(startOfDay(start));
-      let label;
-      if (allDay) label = isToday ? (multiDay ? `until ${dayText(end)}` : 'all day') : dayText(shownOn);
-      else if (start < from) label = `until ${timeText(end)}`;
-      else label = isToday ? timeText(start) : `${dayText(start)} ${timeText(start)}`;
-
-      const id = `${event.uid || title}|${start.toISOString()}`;
+      const id = `${event.uid || title}|${inst.start.toISOString()}`;
       if (seen.has(id)) continue;
+      // an all-day event's end is the morning after its last day
+      const end = inst.end ? new Date(inst.end.getTime() - (allDay ? 1 : 0)) : inst.start;
+      const item = eventItem({ id, title, start: inst.start, end, allDay }, from, to);
+      if (!item) continue;
       seen.add(id);
-      items.push({
-        id,
-        text: title.slice(0, 140),
-        label,
-        today: isToday,
-        sort: `${dayKey(shownOn)}|${allDay || start < from ? '00:00' : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`}`,
-      });
+      items.push(item);
     }
   }
-  return items
-    .sort((a, b) => a.sort.localeCompare(b.sort) || a.text.localeCompare(b.text))
-    .slice(0, MAX_ITEMS)
-    .map(({ sort, ...item }) => item);
+  return finishItems(items);
 }
 
 async function fetchCalendar(link, now = new Date()) {
-  if (!String(link || '').trim()) throw new Error('Your calendar isn\'t connected yet. Click ⚙ and paste its private link under Calendar');
+  if (!String(link || '').trim()) throw new Error('Your calendar isn\'t connected yet. Click ⚙ and, under Calendar, sign in with Google or paste a private link');
   const url = normalizeLink(link);
   if (!url) throw new Error('That doesn\'t look like a calendar link. It should start with https://');
   let res;
@@ -98,4 +115,4 @@ async function fetchCalendar(link, now = new Date()) {
   return eventsFromIcs(text, now);
 }
 
-module.exports = { fetchCalendar, eventsFromIcs, normalizeLink };
+module.exports = { fetchCalendar, eventsFromIcs, normalizeLink, viewWindow, eventItem, finishItems };
