@@ -76,7 +76,9 @@ test('the swap script is valid shell, quotes awkward paths, and can skip reopeni
   const script = installScript({ dmg: "/tmp/it's here/Pomo.dmg", bundle: '/Applications/My Apps/Pomo.app', pid: 4242, relaunch: false });
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'pomo-sh-')), 'install.sh');
   fs.writeFileSync(file, script);
-  execFileSync('/bin/bash', ['-n', file]); // syntax check only, nothing is run
+  // Syntax check only, nothing is run. Skipped on Windows, which has no bash:
+  // the script is only ever used on a Mac, where the build also runs it for real.
+  if (process.platform !== 'win32') execFileSync('/bin/bash', ['-n', file]);
   assert.match(script, /DMG='\/tmp\/it'\\''s here\/Pomo\.dmg'/);
   assert.match(script, /APP='\/Applications\/My Apps\/Pomo\.app'/);
   assert.match(script, /kill -0 4242 /);
