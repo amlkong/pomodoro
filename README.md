@@ -46,7 +46,14 @@ Every change to this repo automatically publishes a new release.
 
 If an update arrives while you're in the middle of a round, Pomo doesn't interrupt you. The pill changes to **✨ Version x.x.x is ready · restart**. Click it when you like, or ignore it and the new version is there next time you open Pomo.
 
-**Mac:** the pill says **✨ Version x.x.x is out · download** and takes you to the download page. Install the new `.dmg` the same way as the first time. (Apple only allows silent updates for apps signed with a paid developer certificate.)
+**Mac: nothing to do either**, as long as Pomo is in your **Applications** folder. It works the same way: Pomo downloads the new version in the background, shows **✨ Getting version x.x.x…**, and restarts into it. If you're mid-round it waits, shows **✨ Version x.x.x is ready · restart**, and installs when you click that or the next time you quit Pomo.
+
+Two things specific to Macs:
+
+- **Pomo has to live in Applications.** If you open it straight from the downloaded `.dmg` window, or from your Downloads folder without moving it, macOS runs it from a locked location and it can't replace itself. In that case the pill says **✨ Version x.x.x is out · download** and takes you to the download page instead. Drag Pomo into Applications once and automatic updates start working.
+- **The Mac files arrive a few minutes after the Windows one** for each new version, so a Mac may notice a release slightly later.
+
+The Mac app isn't signed with a paid Apple developer certificate, which is what Macs normally require for self-updating apps. Pomo does the swap itself instead: it downloads the new disk image from this repo's releases, checks it matches the published file, replaces the app once Pomo has closed, and reopens it. If anything goes wrong partway, the old app is put back.
 
 Either way, your settings, to-do list and Spotify connection are kept.
 
@@ -288,6 +295,8 @@ Good to know: in this mode, a helper window stays open while Pomo runs. Closing 
 
 **The character isn't showing.** Click the pill at the top of the window until it says **on screen** or **in window**.
 
+**Pomo isn't updating itself on a Mac.** Open ⚙ and look at the line under **Check for updates**. If it mentions the Applications folder, quit Pomo, drag it from wherever it is into **Applications**, and open it from there. Versions before 0.1.26 can't update themselves on a Mac at all, so install the newest `.dmg` once by hand and it takes care of itself from then on.
+
 **Pomo isn't updating itself on Windows.** Look at the small version number next to "pomo" at the top left. Versions before 0.1.8 don't have the updater, so install the newest `Pomo-Setup` once by hand and it takes care of itself from then on. On newer versions, open ⚙ and click **Check for updates**: the line underneath says exactly what's happening, including any error. Updates only work in the installed app, not when running from the code.
 
 ## For tinkering
@@ -330,6 +339,7 @@ src/spotify.js       Spotify login and play/pause
 src/task-sources.js  task lists from Todoist and Notion (and completing Todoist tasks, if switched on)
 src/calendar-source.js  read-only events from a calendar's private link
 src/google-calendar.js  Google sign-in: read, add and delete calendar events
+src/mac-update.js     how the Mac app downloads a new version and swaps itself
 src/characters/      one .js and one .css per character
 src/pet/             how a character behaves (shared by the screen overlay and the timer window)
 src/timer/           the timer window

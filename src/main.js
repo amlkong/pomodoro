@@ -629,17 +629,24 @@ function registerIpc() {
   ipcMain.on('update:apply', () => {
     if (!update) return;
     if (update.status === 'ready' && autoUpdater) autoUpdater.quitAndInstall(true, true);
+    else if (update.status === 'ready' && installMacUpdate) { installMacUpdate(true); app.quit(); }
     else if (update.url) shell.openExternal(update.url);
   });
   ipcMain.on('win:close', () => timerWin && timerWin.close());
 }
 
 // ---------- updates ----------
-// Windows: new versions download quietly in the background and are installed
-// the next time the app closes (or right away from the "Restart" pill).
-// Mac: the app isn't signed, so it can only point you at the download page.
-const RELEASES_API = 'https://api.github.com/repos/amlkong/pomodoro/releases/latest';
-const newer = (a, b) => a.localeCompare(b, undefined, { numeric: true }) > 0;
+// New versions download quietly in the background and are installed the next
+// time the app closes, or right away from the "Restart" pill.
+// Windows uses electron-updater. The Mac app isn't signed with an Apple
+// certificate, so it swaps itself by hand (see mac-update.js).
+const macUpdate = require('./mac-update');
+let installMacUpdate = null; // set once a Mac update has been downloaded
+
+// Just opened and nothing in progress? Then switching to the new version right
+// away is welcome, so opening Pomo always lands on the latest one.
+const freshStart = () => Date.now() - startedAt < 3 * 60 * 1000
+  && !state.running && state.completed === 0 && state.remainingMs === state.totalMs;
 
 // One line the settings screen shows, so update problems are never silent.
 function setUpdateStatus(text) {
@@ -667,11 +674,7 @@ function setupUpdates() {
     autoUpdater.on('update-downloaded', (info) => {
       update = { status: 'ready', version: info.version };
       setUpdateStatus(`Version ${info.version} is ready. It installs when Pomo restarts.`);
-      // Just opened and nothing in progress? Switch to the new version right
-      // away, so opening Pomo always lands on the latest one.
-      const justOpened = Date.now() - startedAt < 3 * 60 * 1000;
-      const untouched = !state.running && state.completed === 0 && state.remainingMs === state.totalMs;
-      if (justOpened && untouched) setTimeout(() => autoUpdater.quitAndInstall(true, true), 1500);
+      if (freshStart()) setTimeout(() => autoUpdater.quitAndInstall(true, true), 1500);
     });
     autoUpdater.on('error', (e) => {
       console.error('Update check failed:', e.message);
@@ -679,18 +682,65 @@ function setupUpdates() {
       setUpdateStatus(`Couldn't update: ${String(e.message || e).split('\n')[0].slice(0, 140)}`);
     });
     checkForUpdates = () => autoUpdater.checkForUpdates().catch(() => {});
+  } else if (process.platform === 'darwin') {
+    const bundle = macUpdate.bundlePath(process.execPath);
+    const able = macUpdate.canSelfUpdate(bundle);
+    const dir = path.join(app.getPath('temp'), 'pomo-update');
+    let busy = false;
+    let installing = false;
+    checkForUpdates = async () => {
+      if (busy || (update && update.status === 'ready')) return;
+      busy = true;
+      setUpdateStatus('Checking for a newer version…');
+      try {
+        const found = macUpdate.pickUpdate(await macUpdate.latestRelease(), app.getVersion(), process.arch);
+        if (!found) {
+          setUpdateStatus('You have the latest version.');
+        } else if (!able.ok) {
+          // this copy can't replace itself: point at the download page instead
+          update = { status: 'available', version: found.version, url: found.page };
+          setUpdateStatus(`Version ${found.version} is out. ${able.why}`);
+        } else if (!found.dmg) {
+          // the Mac files are added to a release a few minutes after the Windows one
+          setUpdateStatus(`Version ${found.version} is on its way. Pomo will fetch it as soon as the Mac file is published.`);
+          setTimeout(() => checkForUpdates(), 3 * 60 * 1000);
+        } else {
+          update = { status: 'downloading', version: found.version };
+          setUpdateStatus(`Downloading version ${found.version}…`);
+          let shown = -1;
+          const dmg = await macUpdate.download(found.dmg, dir, (percent) => {
+            if (percent === shown) return;
+            shown = percent;
+            setUpdateStatus(`Downloading version ${found.version}… ${percent}%`);
+          });
+          installMacUpdate = (relaunch) => {
+            if (installing) return;
+            installing = true;
+            macUpdate.startInstall({ dmg, bundle, pid: process.pid, dir, relaunch });
+          };
+          update = { status: 'ready', version: found.version };
+          setUpdateStatus(`Version ${found.version} is ready. It installs when Pomo restarts.`);
+          if (freshStart()) setTimeout(() => { installMacUpdate(true); app.quit(); }, 1500);
+        }
+      } catch (e) {
+        console.error('Update check failed:', e.message);
+        if (update && update.status === 'downloading') update = null;
+        setUpdateStatus(`Couldn't update: ${String(e.message || e).split('\n')[0].slice(0, 140)}`);
+      } finally {
+        busy = false;
+      }
+    };
+    // closing Pomo normally with an update waiting: install it quietly, without reopening
+    app.on('before-quit', () => { if (installMacUpdate) installMacUpdate(false); });
   } else {
-    // Mac: the app isn't signed, so it can only point at the download page.
+    // anything else: just point at the download page
     checkForUpdates = async () => {
       setUpdateStatus('Checking for a newer version…');
       try {
-        const res = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } });
-        if (!res.ok) throw new Error(`GitHub answered ${res.status}`);
-        const rel = await res.json();
-        const version = String(rel.tag_name || '').replace(/^v/, '');
-        if (version && newer(version, app.getVersion())) {
-          update = { status: 'available', version, url: rel.html_url };
-          setUpdateStatus(`Version ${version} is out. Click the pill on the main screen to download it.`);
+        const found = macUpdate.pickUpdate(await macUpdate.latestRelease(), app.getVersion(), process.arch);
+        if (found) {
+          update = { status: 'available', version: found.version, url: found.page };
+          setUpdateStatus(`Version ${found.version} is out. Click the pill on the main screen to download it.`);
         } else {
           setUpdateStatus('You have the latest version.');
         }

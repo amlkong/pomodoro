@@ -60,6 +60,9 @@ jobs:
       - run: npx electron-builder --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      # a real self-update on this Mac: swap an "installed" copy using the app's own script
+      - name: Check the Mac self-update
+        run: bash build/test-mac-update.sh "${{ env.VERSION }}"
       - uses: actions/upload-artifact@v6
         with:
           name: Pomo-mac
